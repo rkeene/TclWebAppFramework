@@ -30,7 +30,9 @@
 
 \layout Title
 
-SchoolWeb Application Framework: Developer's Manual
+SchoolWeb Application Framework:
+\newline 
+Developer's Manual
 \layout Date
 
 01 January 2005
@@ -46,6 +48,19 @@ SchoolWeb Application Framework: Developer's Manual
 \end_inset 
 
 
+\layout Address
+
+
+\noun on 
+Keene Enterprises
+\noun default 
+
+\newline 
+105E Arbor Gate Circle
+\newline 
+Picayune, MS
+\newline 
+39466-6001
 \layout Standard
 
 
@@ -56,7 +71,7 @@ SchoolWeb Application Framework: Developer's Manual
 
 \layout Chapter
 
-Overview
+Introduction
 \layout Standard
 
 Welcome to the SchoolWeb Application Framework Developer's Manual.
@@ -135,12 +150,110 @@ Overview
 \layout Section
 
 Initialization
+\layout Standard
+
+Initialization is done on both persistent and non-persistent portions of
+ the code.
 \layout Section
 
 Output Generation
+\layout Standard
+
+Modules do most of the output generation.
 \layout Section
 
 Persistent versus Non-persistent
+\layout Standard
+
+The SchoolWeb Application Framework is written as a Rivet (mod_rivet) applicatio
+n so portions of the code may remain loaded after a request has finished
+ processing.
+ The portions of code that remain loaded are referred to as persistent.
+ Portions of the code are kept persistent to avoid the need to re-read and
+ parse components that will never change during run-time (e.g., function definitio
+ns.) Non-persistent portions of code are those pieces of the code that are
+ created and destroyed completely within a single request.
+ Portions of the code are made non-persistent to avoid situations where
+ information from a seperate request 
+\begin_inset Quotes eld
+\end_inset 
+
+collides
+\begin_inset Quotes erd
+\end_inset 
+
+ with information from the current request.
+ Things such as the session variables, the request arguments, and the 
+\begin_inset Quotes eld
+\end_inset 
+
+current user
+\begin_inset Quotes erd
+\end_inset 
+
+ are all kept in non-persistent portions of code.
+\layout Subsection
+
+Persistent Code
+\layout Standard
+
+Anything that is not in the 
+\begin_inset Quotes eld
+\end_inset 
+
+request
+\begin_inset Quotes erd
+\end_inset 
+
+ namespace is to be considered persistent.
+ Every module resides in its own namespace so every module is considered
+ persistent.
+\layout Standard
+
+The 
+\begin_inset Quotes eld
+\end_inset 
+
+session
+\begin_inset Quotes erd
+\end_inset 
+
+ module references the 
+\begin_inset Quotes eld
+\end_inset 
+
+request
+\begin_inset Quotes erd
+\end_inset 
+
+ namespace to store its non-persistent data.
+\layout Standard
+
+Most code should be written as persistent code to minimize CPU time spent
+ parsing to process a request.
+\layout Subsection
+
+Non-Persistent Code
+\layout Standard
+
+Anything that is in the 
+\begin_inset Quotes eld
+\end_inset 
+
+request
+\begin_inset Quotes erd
+\end_inset 
+
+ namespace is to be considered non-persistent.
+ Every HTTP request gets its own unique and exclusive 
+\begin_inset Quotes eld
+\end_inset 
+
+request
+\begin_inset Quotes erd
+\end_inset 
+
+ namespace that will never be reused.
 \layout Chapter
 
 Modules
@@ -2364,6 +2477,15 @@ calendar::entry
 \layout Chapter
 \start_of_appendix 
 Terminology
+\layout Section
+
+Definitions
+\layout Subsection
+
+Persistent
+\layout Subsection
+
+Non-Persistent
 \layout Chapter
 
 Support
@@ -2375,20 +2497,14 @@ Support Information
 Contact
 \layout Enumerate
 
-
-\begin_inset LatexCommand \htmlurl[email:]{mailto:support@keene-enterprises.com}
-
-\end_inset 
-
-
+web: 
+\family typewriter 
+http://www.keene-enterprises.com/
 \layout Enumerate
 
-
-\begin_inset LatexCommand \htmlurl[web:]{http://www.keene-enterprises.com/webapp/support/}
-
-\end_inset 
-
-
+email: 
+\family typewriter 
+support@keene-enterprises.com
 \layout Enumerate
 
 phone: (228) 547-8915
@@ -2397,10 +2513,13 @@ phone: (228) 547-8915
 License Information
 \layout Enumerate
 
-License Number: 
+Site Name:
 \layout Enumerate
 
-Installation Name:
+Site License Number:
+\layout Enumerate
+
+Site License Key:
 \layout Chapter
 
 License
