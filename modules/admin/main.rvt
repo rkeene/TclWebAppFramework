@@ -15,4 +15,15 @@
     <td><a href="<? puts -nonewline [web::makeurl / 1 [list action information]] ?>"><? puts -nonewline [web::icon admin-info ""] ?></a></td>
     <td><a href="<? puts -nonewline [web::makeurl / 1 [list action information]] ?>">User information.</a></td>
   </tr>
+<?
+	if {[user::hasflag root]} {
+?>
+  <tr>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action su]] ?>"><? puts -nonewline [web::icon admin-su ""] ?></a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action su]] ?>">Switch to a user.</a></td>
+  </tr>
+
+<?
+	}
+?>
 </table>

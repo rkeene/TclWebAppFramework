@@ -76,7 +76,7 @@ namespace eval admin {
 						continue
 					}
 
-					user::setopt $newuid $opts($idx.var) $opts($idx.val)
+					user::setopt $opts($idx.var) $opts($idx.val) $newuid
 				}
 
 				# Cleanup
@@ -184,7 +184,7 @@ namespace eval admin {
 						if {![info exists opts($idx.var)] || ![info exists opts($idx.val)]} {
 							continue
 						}
-						user::setopt $uid $opts($idx.var) $opts($idx.val)
+						user::setopt $opts($idx.var) $opts($idx.val) $uid
 					}
 				}
 				if {[info exists ::request::args(set_update_flags)]} {
@@ -206,10 +206,10 @@ namespace eval admin {
 						set act $::request::args($var)
 						switch -- $act {
 							"set" {
-								user::setflag $uid $flag
+								user::setflag $flag $uid
 							}
 							"unset" {
-								user::unsetflag $uid $flag
+								user::unsetflag $flag $uid
 							}
 						}
 					}
@@ -232,6 +232,31 @@ namespace eval admin {
 			return [main]
 		}
 		return "info.rvt"
+	}
+
+	proc su {subact} {
+		if {$subact == "cancel"} {
+			unset -nocomplain ::request::args(newuid)
+			return [main]
+		}
+
+		if {![user::hasflag "root"]} {
+			unset -nocomplain ::request::args(newuid) ::request::args(action)
+			return ""
+		}
+
+		if {[info exists ::request::args(newuid)]} {
+			set ret [user::setuid $::request::args(newuid)]
+			unset ::request::args(newuid)
+
+			if {$ret == 0} {
+				return ""
+			}
+
+			return "su-complete.rvt"
+		}
+
+		return "su.rvt"
 	}
 }
 

@@ -29,12 +29,20 @@ source local/modules/autoload/onlyonce/siteconfig.tcl
 db::create -dbname sessions -fields [list sessionid data]
 db::create -dbname user -fields [list uid user name flags opts pass]
 
+set manrootuid [uuid::gen user]
+db::set -dbname user -field uid $manrootuid -field user root -field flags [list root] -field pass "*LK*"
+user::setuid $manrootuid
+
 set rootuid [user::create -user $rootuser -name "Administrator" -flags root -pass $rootpass]
-set anonuid [user::create -user anonymous -name "Anonymous Web User"]
+
 if {$rootuid == 0} {
-	set rootuid [lindex [user::listflag root] 0]
+	set rootuid [getuid $rootuser]
 	user::change -uid $rootuid -flags root -pass $rootpass
 }
+user::delete $manrootuid
+user::setuid $rootuid
+
+set anonuid [user::create -user anonymous -name "Anonymous Web User"]
 if {$anonuid == 0} {
 	set anonuid [user::getuid anonymous]
 }

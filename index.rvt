@@ -1,5 +1,8 @@
 <?
+	namespace eval cache {}
+
 if {[catch {
+
 	unset -nocomplain args
 	unset -nocomplain module
 
@@ -35,10 +38,7 @@ if {[catch {
 	}
 
 	# Go no further with a UID.
-	if {![info exists ::session::vars(uid)]} {
-		set ::session::vars(uid) 0
-	}
-	if {$::session::vars(uid) == 0} {
+	if {[user::getuid] == 0} {
 		set module "login"
 	}
 
@@ -49,7 +49,7 @@ if {[catch {
 			if {[string match "*:*" $initmod]} {
 				set initmod [join [lrange [split $initmod :] 1 end] :]
 			}
-			set modpage [module::call $::session::vars(uid) $initmod start]
+			set modpage [module::call $initmod start]
 			if {$modpage == ""} {
 				continue
 			}
@@ -57,7 +57,7 @@ if {[catch {
 			set ::finimods [linsert $::finimods 0 $initmod]
 		}
 		foreach finimod $::finimods {
-			set modpage [module::call $::session::vars(uid) $finimod stop]
+			set modpage [module::call $finimod stop]
 			if {$modpage == ""} {
 				continue
 			}
@@ -90,16 +90,16 @@ if {[catch {
 	}
 
 	if {[info exists args(action)]} {
-		set newpage [module::call $::session::vars(uid) $module $args(action) $subaction]
+		set newpage [module::call $module $args(action) $subaction]
 	} else {
-		set newpage [module::call $::session::vars(uid) $module "" $subaction]
+		set newpage [module::call $module "" $subaction]
 	}
 
 	# Assume a blank return value means
 	# that the user is required to authenticate?
 	if {$newpage == ""} {
 		set module "login"
-		set newpage [module::call $::session::vars(uid) login "" ""]
+		set newpage [module::call login "" ""]
 	}
 
 	foreach {headmod header} $::headers {
@@ -127,4 +127,6 @@ if {[catch {
 	puts "  </BODY>"
 	puts "</HTML>"
 }
+
+	namespace delete cache
 ?>

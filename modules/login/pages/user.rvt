@@ -1,12 +1,12 @@
 Welcome authenticated user!<Br>
 Hello
 <?
-	puts "$::session::vars(uid)"
+	puts "[user::getuid]"
 ?><br>
 
 <table>
 <?
-	foreach modinfo [lsort -dictionary [module::list $::session::vars(uid)]] {
+	foreach modinfo [lsort -dictionary [module::list [user::getuid]]] {
 		set mod [lindex $modinfo 0]
 		set flg [lindex $modinfo 1]
 		set icon [lindex $modinfo 2]

@@ -5,6 +5,7 @@ package require hook
 package require crypt
 package require uuid
 package require module
+package require session
 
 uuid::register 11 user
 
@@ -13,12 +14,20 @@ namespace eval user {
 
 	# Name: ::user::getuid
 	# Args:
-	#	username	Username to convert to a UID
+	#	?username?	Username to convert to a UID
+	#			If not specified, current UID is returned.
 	# Rets: The UID of the specified username.
 	#	0 is returned if no user exists.
 	# Stat: Complete
-	proc getuid {username} {
+	proc getuid {{username ""}} {
 		hook::call user::getuid::enter $username
+
+		if {$username == ""} {
+			if {[info exists ::session::vars(uid)]} {
+				return $::session::vars(uid)
+			}
+			return 0
+		}
 
 		set uid [db::get -dbname user -field uid -where user=$username]
 
@@ -69,6 +78,12 @@ namespace eval user {
 			return 0
 		}
 
+		set seturet [user::setuid $uid 1]
+		if {$seturet == 0} {
+			debug::log user::login "Could not setuid !"
+			return 0
+		}
+
 		return 1
 	}
 
@@ -82,6 +97,12 @@ namespace eval user {
 	# Rets: The UID of the new user, 0 on failure.
 	# Stat: Complete
 	proc create args {
+		# Require admin to create a user.
+		if {![hasflag "admin"]} {
+			debug::log user::create "Attempting to create user without admin flag!"
+			return 0
+		}
+
 		set useridx [expr [lsearch -exact $args "-user"] + 1]
 		set nameidx [expr [lsearch -exact $args "-name"] + 1]
 		set flagsidx [expr [lsearch -exact $args "-flags"] + 1]
@@ -107,7 +128,12 @@ namespace eval user {
 			set opts ""
 		}
 		if {$passidx != 0} {
-			set pass [crypt [lindex $args $passidx]]
+			set passplain [lindex $args $passidx]
+			if {$passplain == ""} {
+				set pass "*LK*"
+			} else {
+				set pass [crypt $passplain]
+			}
 		} else {
 			set pass "*LK*"
 		}
@@ -115,22 +141,31 @@ namespace eval user {
 		set user [lindex $args $useridx]
 
 		if {$user == ""} {
+			debug::log user::create "User specified as blank!"
 			return 0
 		}
 
-		hook::call user::create::enter $user $name $flags $opts $pass
+		# Require the root flag to set the root flag.
+		if {[lsearch -exact $flags "root"] != -1 && ![hasflag "root"]} {
+			debug::log user::create "Non-root user tried to create root user!"
+			return 0
+		}
 
 		# Verify that the user does not already exist
 		set check [db::get -dbname user -field uid -where user=$user]
 		if {$check != ""} {
+			debug::log user::create "Tried to create user with existing username!"
 			return 0
 		}
+
+		hook::call user::create::enter $user $name $flags $opts $pass
 
 		set uid [uuid::gen user]
 
 		set success [db::set -dbname user -field uid $uid -field user $user -field name $name -field flags $flags -field opts $opts -field pass $pass]
 
 		if {!$success} {
+			debug::log user::create "Failed to update database while creating user."
 			return 0
 		}
 
@@ -145,6 +180,16 @@ namespace eval user {
 	# Rets: 1 on success, 0 otherwise
 	# Stat: Complete
 	proc delete {uid} {
+		# Require admin to delete a user.
+		if {![hasflag "admin"]} {
+			return 0
+		}
+
+		# Do not allow non-root users to delete root users.
+		if {![hasflag "root"] && [hasflag "root" $uid]} {
+			return 0
+		}
+
 		hook::call user::delete::enter $uid
 
 		set success [db::unset -dbname user -where uid=$uid]
@@ -156,7 +201,7 @@ namespace eval user {
 
 	# Name: ::user::change
 	# Args:
-	#	-uid uid	UID of user to update
+	#	?-uid uid?	UID of user to update
 	# 	?-user str?	Change username to `str'
 	#	?-name str?	Change fullname to `str'
 	#	?-flags list?	Change flags list to `list'
@@ -172,11 +217,21 @@ namespace eval user {
 		set optsidx [expr [lsearch -exact $args "-opts"] + 1]
 		set passidx [expr [lsearch -exact $args "-pass"] + 1]
 
-		if {$uididx == 0} {
-			return -code error "error: You must specify -uid."
+		if {$uididx != 0} {
+			set uid [lindex $args $uididx]
+		} else {
+			set uid [getuid]
 		}
 
-		set uid [lindex $args $uididx]
+		# Require admin to set information for other users.
+		if {![hasflag "admin"] && $uid != [getuid]} {
+			return 0
+		}
+
+		# Only allow those with root to modify root.
+		if {[hasflag "root" $uid] && ![hasflag "root"]} {
+			return 0
+		}
 
 		hook::call user::create::enter $uid $args
 
@@ -198,9 +253,16 @@ namespace eval user {
 		}
 		if {$flagsidx != 0} {
 			set flags [lindex $args $flagsidx]
-			set check [db::set -dbname user -field flags $flags -where uid=$uid]
-			if {!$check} {
+
+			# Require admin to set any flag, and
+			# Require root to set the root flag.
+			if {![hasflag "admin"] || ([lsearch -exact $flags "root"] != -1 && ![hasflag "root"])} {
 				set ret 0
+			} else {
+				set check [db::set -dbname user -field flags $flags -where uid=$uid]
+				if {!$check} {
+					set ret 0
+				}
 			}
 		}
 		if {$optsidx != 0} {
@@ -211,7 +273,12 @@ namespace eval user {
 			}
 		}
 		if {$passidx != 0} {
-			set pass [crypt [lindex $args $passidx]]
+			set passplain [lindex $args $passidx]
+			if {$passplain == ""} {
+				set pass "*LK*"
+			} else {
+				set pass [crypt $passplain]
+			}
 			set check [db::set -dbname user -field pass $pass -where uid=$uid]
 			if {!$check} {
 				set ret 0
@@ -225,7 +292,7 @@ namespace eval user {
 
 	# Name: ::user::get
 	# Args:
-	# 	-uid {uid|ALL}	UID to get information on
+	# 	?-uid {uid|ALL}? UID to get information on
 	#	?-user?		Return the username (string)
 	#	?-name?		Return the fullname (string)
 	#	?-flags?	Return the flags (list)
@@ -266,7 +333,7 @@ namespace eval user {
 			}
 		}
 		if {![info exists uid]} {
-			return -code error "error: You must specify atleast -uid."
+			set uid [getuid]
 		}
 
 		if {[info exists specfields]} {
@@ -316,11 +383,15 @@ namespace eval user {
 
 	# Name: ::user::hasflag
 	# Args:
-	#	uid		UID to check
 	#	chkflags	List of flags to check for
+	#	?uid?		UID to check
 	# Rets: 1 on success, 0 otherwise
 	# Stat: Complete
-	proc hasflag {uid chkflags} {
+	proc hasflag {chkflags {uid ""}} {
+		if {$uid == ""} {
+			set uid [getuid]
+		}
+
 		if {[uuid::type $uid] == "user"} {
 			set flags [string tolower [get -uid $uid -flags]]
 		} else {
@@ -349,11 +420,16 @@ namespace eval user {
 
 	# Name: ::user::setflag
 	# Args:
-	#	uid		UID to modify
 	#	newflags	List of flags to set.
+	#	?uid?		UID to modify
 	# Rets: 1 on success, 0 otherwise
+	# Flag: ADMIN
 	# Stat: Complete
-	proc setflag {uid newflags} {
+	proc setflag {newflags {uid ""}} {
+		if {$uid == ""} {
+			set uid [getuid]
+		}
+
 		hook::call user::setflag::enter $uid $newflags
 
 		set flags [string tolower [get -uid $uid -flags]]
@@ -390,7 +466,11 @@ namespace eval user {
 	#	newflags	List of flags to remove.
 	# Rets: 1 on success, 0 otherwise
 	# Stat: Complete
-	proc unsetflag {uid delflags} {
+	proc unsetflag {delflags {uid ""}} {
+		if {$uid == ""} {
+			set uid [getuid]
+		}
+
 		hook::call user::unsetflag::enter $uid $delflags
 
 		set flags [string tolower [get -uid $uid -flags]]
@@ -398,6 +478,9 @@ namespace eval user {
 		set delflags [string tolower $delflags]
 
 		set update 0
+
+		set newflags ""
+
 		foreach flag $flags {
 			set found [lsearch -exact $delflags $flag]
 
@@ -427,12 +510,16 @@ namespace eval user {
 
 	# Name: ::user::setopt
 	# Args:
-	# 	uid		UID to modify
 	#	opt		Option to set
 	#	value		Value to set option to.
+	# 	?uid?		UID to modify
 	# Rets: 1 on success, 0 otherwise
 	# Stat: In progress
-	proc setopt {uid opt value} {
+	proc setopt {opt value {uid ""}} {
+		if {$uid == ""} {
+			set uid [getuid]
+		}
+
 		set opts [get -uid $uid -opts]
 
 		set optidx [lsearch -glob $opts [list $opt *]]
@@ -494,11 +581,15 @@ namespace eval user {
 
 	# Name: ::user::getopt
 	# Args:
-	# 	uid		UID to examine
 	#	opt		Option to read
+	# 	?uid?		UID to examine (default to current)
 	# Rets: String value of `opt', empty string if not found
 	# Stat: In progress
-	proc getopt {uid opt} {
+	proc getopt {opt {uid ""}} {
+		if {$uid == ""} {
+			set uid [getuid]
+		}
+
 		set opts [get -uid $uid -opts]
 
 		set ret ""
@@ -591,5 +682,31 @@ namespace eval user {
 		}
 
 		return [lsort -dictionary $flags]
+	}
+
+	# Name: ::user::setuid
+	# Args:
+	#	newuid		UID to switch to.
+	#	?override?	Override security checks.
+	# Rets: 1 on success, 0 otherwise
+	# Stat: In progress
+	proc setuid {newuid {override 0}} {
+		if {$newuid == 0} {
+			return 0
+		}
+
+		if {[uuid::type $newuid] != "user"} {
+			return 0
+		}
+
+		if {[info exists ::session::vars(uid)] && !$override} {
+			if {![hasflag root $::session::vars(uid)]} {
+				return 0
+			}
+		}
+
+		set ::session::vars(uid) $newuid
+
+		return 1
 	}
 }

@@ -50,7 +50,6 @@ namespace eval module {
 
 	# Name: ::module::call
 	# Args:
-	#	uid		UID to make call as
 	#	module		Name of module to call
 	#	?action?	Primary action to initiate
 	#	?subaction?	Subaction
@@ -59,14 +58,7 @@ namespace eval module {
 	#	be `parse'd or an absolute (with a '/' as the first char)
 	#	file to be parsed.
 	# Stat: Complete
-	proc call args {
-		if {[llength $args] < 2} {
-			return -code error "error: You must supply the 'uid' and 'module' parameters."
-		}
-
-		set uid [lindex $args 0]
-		set module [lindex $args 1]
-
+	proc call {module {action main} {subaction ""}} {
 		if {![::info exists ::module::modinfo($module)]} {
 			return ""
 		}
@@ -75,24 +67,15 @@ namespace eval module {
 
 		# Verify that the user specified has suffcient privileges to
 		# use this module..
-		if {![user::hasflag $uid $requiredflags]} {
+		if {![user::hasflag $requiredflags]} {
 			return ""
 		}
 
-		if {[llength $args] >= 3} {
-			set action [lindex $args 2]
-			set substart 3
-		} else {
-			set action main
-			set substart 2
-		}
 		if {$action == ""} {
-			set action main
+			set action "main"
 		}
 
-		set ret ""
-
-		set ret [${module}::${action} [lrange $args $substart end]]
+		set ret [${module}::${action} $subaction]
 
 		return $ret
 	}
@@ -105,7 +88,7 @@ namespace eval module {
 	#			notation)
 	# Rets: A list of modules which are available to users with `flags'
 	#	In the form of: {module flags icon desc}
-	# Stat: Complete
+	# Stat: In progress
 	proc list {{uid ""}} {
 		set ret ""
 
@@ -119,7 +102,7 @@ namespace eval module {
 			set chkflags [lindex $modinfo 0]
 			set icon [lindex $modinfo 1]
 			set desc [lindex $modinfo 2]
-			if {!$allbool && ![user::hasflag $uid $chkflags]} {
+			if {!$allbool && ![user::hasflag $chkflags $uid]} {
 				continue
 			}
 			lappend ret [::list $module $chkflags $icon $desc]

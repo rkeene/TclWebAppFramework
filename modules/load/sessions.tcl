@@ -11,8 +11,7 @@ if {$sessionid == ""} {
 
 # Verify that the user and pass are correct if specified
 # if they are, setup an authenticated session.
-
-if {![info exists ::session::vars(uid)] || [info exists args(user)]} {
+if {[user::getuid] == "0" || [info exists args(user)]} {
 	if {[info exists args(user)]} {
 		set user_ok 0
 		set uid 0
@@ -29,12 +28,12 @@ if {![info exists ::session::vars(uid)] || [info exists args(user)]} {
 		set args(user) anonymous
 	}
 
-	if {$user_ok && $uid != 0} {
+	if {$user_ok && $uid != "0"} {
 		set ::session::vars(user) $args(user)
-		set ::session::vars(uid) $uid
+		user::setuid $uid
 	} else {
 		unset -nocomplain ::session::vars(user)
-		unset -nocomplain ::session::vars(uid)
+		user::setuid [user::getuid anonymous]
 		unset -nocomplain args(user)
 		unset -nocomplain args(pass)
 		set req_module $module
