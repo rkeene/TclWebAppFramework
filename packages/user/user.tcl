@@ -5,6 +5,8 @@ package require crypt
 package provide user 0.1
 
 namespace eval user {
+	set badflag(limit) 1
+
 	# Name: ::user::getuid
 	# Args:
 	#	username	Username to convert to a UID
@@ -90,7 +92,7 @@ namespace eval user {
 			set opts ""
 		}
 		if {$passidx != 0} {
-			set pass [lindex $args $passidx]
+			set pass [crypt [lindex $args $passidx]]
 		} else {
 			set pass "*LK*"
 		}
@@ -106,9 +108,6 @@ namespace eval user {
 		}
 
 		set uid [db::genuuid 11]
-
-		# TEMPORARY
-		db::create -dbname user -fields [list uid user name flags opts pass]
 
 		set success [db::set -dbname user -field uid $uid -field user $user -field name $name -field flags $flags -field opts $opts -field pass $pass]
 
@@ -317,8 +316,13 @@ namespace eval user {
 
 		hook::call user::hasflag::enter $uid $chkflags
 
+		set rootchk [lsearch -exact $flags root]
+
 		foreach flag [string tolower $chkflags] {
 			set found [lsearch -exact $flags $flag]
+			if {$rootchk != -1 && ![info exists ::user::badflag($flag)]} {
+				set found 0
+			}
 			if {$found == -1} {
 				hook::call user::hasflag::return 0 $uid $chkflags
 				return 0
@@ -335,7 +339,7 @@ namespace eval user {
 	#	uid		UID to modify
 	#	newflags	List of flags to set.
 	# Rets: 1 on success, 0 otherwise
-	# Stat: In progress
+	# Stat: Complete
 	proc setflag {uid newflags} {
 		hook::call user::setflag::enter $uid $newflags
 
@@ -446,6 +450,37 @@ namespace eval user {
 		}
 
 		hook::call user::exists::return $ret $uid
+
+		return $ret
+	}
+
+	# Name: ::user::listflag
+	# Args:
+	#	flag		Flag to check for
+	# Rets: A list of UIDs for users who have the flag specified.
+	# Stat: Complete
+	proc listflag {flag} {
+		hook::call user::listflag::enter $flag
+
+		set isbad [info exists ::user::badflag($flag)]
+
+		set ret ""
+		foreach chk [get -uid ALL -fields [list uid flags]] {
+			set uid [lindex $chk 0]
+			set flags [lindex $chk 1]
+
+			# Root belongs to everything, except those bad ones.
+			if {[lsearch -exact $flags root] != -1 && !$isbad} {
+				lappend ret $uid
+				continue
+			}
+
+			if {[lsearch -exact $flags $flag] != -1} {
+				lappend ret $uid
+			}
+		}
+
+		hook::call user::listflag::enter $ret $flag
 
 		return $ret
 	}

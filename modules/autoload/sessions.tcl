@@ -50,9 +50,6 @@ proc session_load {} {
 	# Set a dummy variable so the array exists
 	set ::request::session(sessionid) $sessionid
 
-	# TEMPORARY
-	db::create -dbname sessions -fields [list sessionid data]
-
 	db::set -dbname sessions -field sessionid $sessionid
 
 	cookie set sessionid $sessionid -minutes 720
@@ -75,9 +72,6 @@ proc session_save {} {
 		return 1
 	}
 
-	# TEMPORARY
-	db::create -dbname sessions -fields [list sessionid data]
-
 	# If the array gets deleted, delete everything from the database
 	if {![array exists ::request::session]} {
 		debug "Session has been terminated."
@@ -99,5 +93,5 @@ proc session_save {} {
 }
 
 proc session_terminate {} {
-	unset -nocomplain ::request::args(sessionid) ::request::args(key) ::request::session
+	unset -nocomplain ::request::args(sessionid) ::request::session
 }
