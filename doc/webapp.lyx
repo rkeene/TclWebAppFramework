@@ -2462,6 +2462,18 @@ Functions
 \layout Subsubsection
 
 calendar::create
+\layout Enumerate
+
+Syntax
+\layout Enumerate
+
+Arguments
+\layout Enumerate
+
+Return Value
+\layout Enumerate
+
+Notes
 \layout Subsubsection
 
 calendar::change
@@ -2474,6 +2486,70 @@ calendar::generate
 \layout Subsubsection
 
 calendar::entry
+\layout Section
+
+Help
+\layout Subsection
+
+Overview
+\layout Subsection
+
+Functions
+\layout Subsubsection
+
+help::get
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+help::get <topic>
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+topic
+\begin_deeper 
+\layout Enumerate
+
+Topic to retrieve help information for.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+This function returns a string representing the last entered help information
+ for the specified topic.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
+
+help::set
+\layout Subsubsection
+
+help::addcomment
+\layout Subsubsection
+
+help::removecomment
+\layout Subsubsection
+
+help::getcomments
 \layout Chapter
 \start_of_appendix 
 Terminology
