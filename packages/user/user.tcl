@@ -473,8 +473,8 @@ namespace eval user {
 
 	# Name: ::user::unsetflag
 	# Args:
-	#	uid		UID to modify.
-	#	newflags	List of flags to remove.
+	#	delflags	List of flags to remove.
+	#	?uid?		UID to modify.
 	# Rets: 1 on success, 0 otherwise
 	# Stat: Complete
 	proc unsetflag {delflags {uid ""}} {
