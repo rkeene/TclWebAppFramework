@@ -174,7 +174,7 @@ n so portions of the code may remain loaded after a request has finished
 ns.) Non-persistent portions of code are those pieces of the code that are
  created and destroyed completely within a single request.
  Portions of the code are made non-persistent to avoid situations where
- information from a seperate request 
+ information from a separate request 
 \begin_inset Quotes eld
 \end_inset 
 
@@ -865,7 +865,7 @@ Syntax
 
 
 \family typewriter 
-user::getuid ?username?
+user::getuid ?<username>?
 \end_deeper 
 \layout Enumerate
 
