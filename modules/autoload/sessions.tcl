@@ -1,4 +1,4 @@
-set init(session_switch) ""
+set init(session_switch) "siteconfig"
 
 proc session_switch {action} {
 	package require db
@@ -27,36 +27,35 @@ proc session_load {} {
 		debug "Loading session ($sessionid)"
 
 		# Restore session data
-		foreach dbkey [db::listkeys sessions] {
-			set id [lindex $dbkey 0]
-			set var [lindex $dbkey 1]
-
-			if {$id != $sessionid} { continue }
-
+		foreach {var val} [lindex [db::get -dbname sessions -fields data -where sessionid=$sessionid] 0] {
 			debug "Loading from session: $var"
-			set ::request::session($var) [db::get sessions $dbkey]
+			set ::request::session($var) $val
 		}
 		set ::request::session(sessionid) $sessionid
 
 		if {$updateargs} {
 			set ::request::args(sessionid) $sessionid
+		} else {
+			cookie set sessionid $sessionid -minutes 720
 		}
-
-		cookie set sessionid $sessionid -minutes 10
 
 		return 0
 	}
 
 	# No session specified, create one.
-	set sessionid [db::getuuid 110]
+	set sessionid [::db::genuuid 110]
 
 	debug "Creating new session ($sessionid)"
 
 	# Set a dummy variable so the array exists
 	set ::request::session(sessionid) $sessionid
-	db::set sessions [list $sessionid sessionid] $sessionid
 
-	cookie set sessionid $sessionid -minutes 10
+	# TEMPORARY
+	db::create -dbname sessions -fields [list sessionid data]
+
+	db::set -dbname sessions -field sessionid $sessionid
+
+	cookie set sessionid $sessionid -minutes 720
 
 	return 0
 }
@@ -76,37 +75,25 @@ proc session_save {} {
 		return 1
 	}
 
+	# TEMPORARY
+	db::create -dbname sessions -fields [list sessionid data]
+
 	# If the array gets deleted, delete everything from the database
 	if {![array exists ::request::session]} {
 		debug "Session has been terminated."
-		foreach key [db::listkeys sessions] {
-			set id [lindex $key 0]
-			set var [lindex $key 1]
-
-			if {$id != $sessionid} { continue }
-
-			db::unset sessions $key
-		}
+		db::unset -dbname sessions -where sessionid=$sessionid
 		return 0
 	}
 
-	# Add or update new keys
 	foreach var [array names ::request::session] {
-		debug "Writing ::request::session($var)"
-		db::set sessions [list $sessionid $var] $::request::session($var)
+		debug "Saving session variable: $var"
+		set val $::request::session($var)
+		lappend newdata $var $val
 	}
-
-	# Delete keys which no longer exist
-	foreach key [db::listkeys sessions] {
-		set id [lindex $key 0]
-		set var [lindex $key 1]
-
-		if {$id != $sessionid} { continue }
-
-		if {![info exists ::request::session($var)]} {
-			db::unset sessions $key
-		}
+	if {![info exists newdata]} {
+		set newdata ""
 	}
+	db::set -dbname sessions -field sessionid $sessionid -field data $newdata
 
 	return 0
 }

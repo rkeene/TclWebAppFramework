@@ -1,6 +1,8 @@
+package require mysqltcl
+package require hook
+
 package provide db 0.1
 
-package require mysqltcl
 
 namespace eval db {
 	# Name: ::db::genuuid
@@ -250,7 +252,8 @@ namespace eval db {
 	# Name: ::db::get
 	# Args: (dash method)
 	#	-dbname name	Name of database to retrieve from.
-	#	-field list	Field to return.
+	#	-fields list	List of fields to return  -OR-
+	#	-field str	Field to return
 	#	-all		Boolean conditional to return all or just one.
 	#	?-where cond?	Conditions to decide where to read.
 	# Rets: The value of the variable
@@ -258,9 +261,14 @@ namespace eval db {
 	proc get args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
 		::set fieldsidx [expr [lsearch -exact $args "-fields"] + 1]
+		::set fieldidx [expr [lsearch -exact $args "-field"] + 1]
 		::set whereidx [expr [lsearch -exact $args "-where"] + 1]
 		::set allbool [expr !!([lsearch -exact $args "-all"] + 1)]
-		if {$dbnameidx == 0 || $fieldsidx == 0} {
+
+		if {$fieldsidx == 0 && $fieldidx == 0} {
+			return -code error "error: You may only specify one of -field or -fields."
+		}
+		if {$dbnameidx == 0 || ($fieldsidx == 0 && $fieldidx == 0)} {
 			return -code error "error: You must specify -dbname and -fields."
 		}
 
@@ -272,14 +280,22 @@ namespace eval db {
 			::unset wherework
 		}
 
+		if {$fieldsidx != 0} {
+			::set fieldstr [join [lindex $args $fieldsidx] {, }]
+			::set selmode "-list"
+		}
+		if {$fieldidx != 0} {
+			::set fieldstr [lindex $args $fieldidx]
+			::set selmode "-flatlist"
+		}
+
 		::set dbname [lindex $args $dbnameidx]
-		::set fields [lindex $args $fieldsidx]
 
 		::set dbhandle [connect]
 		if {[info exists where]} {
-			::set ret [mysqlsel $dbhandle "SELECT [join $fields {, }] FROM $dbname WHERE $wherevar=[sqlquote $whereval];" -list]
+			::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];" $selmode]
 		} else {
-			::set ret [mysqlsel $dbhandle "SELECT [join $fields {, }] FROM $dbname;" -list]
+			::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" $selmode]
 		}
 
 		if {$allbool} {
