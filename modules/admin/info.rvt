@@ -1,0 +1,48 @@
+<table>
+<?
+	foreach uid [user::get -uid ALL -uids] {
+?>
+  <tr>
+    <td>User ID:</td>
+    <td><? puts -nonewline $uid ?></td>
+  </tr>
+  <tr>
+    <td>Username:</td>
+    <td><? puts -nonewline [user::get -uid $uid -user] ?></td>
+  </tr>
+  <tr>
+    <td>Full Name:</td>
+    <td><? puts -nonewline [user::get -uid $uid -name] ?></td>
+  </tr>
+  <tr>
+    <td>Flags:</td>
+    <td><? puts -nonewline [join [user::get -uid $uid -flags] {, }] ?></td>
+  </tr>
+  <tr>
+    <td>Options:</td>
+    <td>
+      <table>
+<?
+	foreach optval [user::get -uid $uid -opts] {
+		set opt [lindex $optval 0]
+		set val [lindex $optval 1]
+		puts "<tr><td>$opt</td><td> = </td><td>$val</td></tr>"
+	}
+?>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2">
+      <hr width="90%">
+    </td>
+  </tr>
+<?
+	}
+?>
+</table>
+
+<form action="." method="post">
+<?  puts [web::generate_vars form] ?>
+<input type="submit" name="subaction" value="Done">
+</form>

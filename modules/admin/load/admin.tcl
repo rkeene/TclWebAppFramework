@@ -226,6 +226,13 @@ namespace eval admin {
 
 		return "modify-sel.rvt"
 	}
+
+	proc info args {
+		if {$args == "done"} {
+			return [main]
+		}
+		return "info.rvt"
+	}
 }
 
 module::register admin [list admin] admin.png "User Administration"

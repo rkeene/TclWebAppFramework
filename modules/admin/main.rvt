@@ -11,4 +11,8 @@
     <td><a href="<? puts -nonewline [web::makeurl / 1 [list action delete]] ?>"><? puts -nonewline [web::icon admin-mod ""] ?></a></td>
     <td><a href="<? puts -nonewline [web::makeurl / 1 [list action modify]] ?>">Modify users.</a></td>
   </tr>
+  <tr>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action info]] ?>"><? puts -nonewline [web::icon admin-info ""] ?></a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action info]] ?>">User information.</a></td>
+  </tr>
 </table>
