@@ -29,7 +29,11 @@ namespace eval user {
 			return 0
 		}
 
-		set uid [db::get -dbname user -field uid -where user=$username]
+		if {[info exists ::cache::user([list uid $username])]} {
+			set uid $::cache::user([list uid $username])
+		} else {
+			set uid [db::get -dbname user -field uid -where user=$username]
+		}
 
 		if {$uid == "" || $uid == 0} {
 			return 0
@@ -259,6 +263,9 @@ namespace eval user {
 			if {![hasflag "admin"] || ([lsearch -exact $flags "root"] != -1 && ![hasflag "root"])} {
 				set ret 0
 			} else {
+				# Invalidate the cache, in case we change something.
+				unset -nocomplain ::cache::user
+
 				set check [db::set -dbname user -field flags $flags -where uid=$uid]
 				if {!$check} {
 					set ret 0
@@ -393,7 +400,11 @@ namespace eval user {
 		}
 
 		if {[uuid::type $uid] == "user"} {
-			set flags [string tolower [get -uid $uid -flags]]
+			if {[info exists ::cache::user([list flags $uid])]} {
+				set flags $::cache::user([list flags $uid])
+			} else {
+				set flags [string tolower [get -uid $uid -flags]]
+			}
 		} else {
 			set flags $uid
 		}
