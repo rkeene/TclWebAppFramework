@@ -9,30 +9,43 @@
 \spacing single 
 \papersize letterpaper
 \paperpackage a4
-\use_geometry 0
+\use_geometry 1
 \use_amsmath 0
 \use_natbib 0
 \use_numerical_citations 0
 \paperorientation portrait
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
 \secnumdepth 3
 \tocdepth 3
-\paragraph_separation indent
+\paragraph_separation skip
 \defskip medskip
 \quotes_language english
 \quotes_times 2
 \papercolumns 1
-\papersides 1
-\paperpagestyle default
+\papersides 2
+\paperpagestyle fancy
 
 \layout Title
 
-SchoolWeb Application Framework: Developers Manual
-\layout Author
-
-Keene Enterprises
+SchoolWeb Application Framework: Developer's Manual
 \layout Date
 
 01 January 2005
+\layout Author
+
+
+\begin_inset Graphics
+	filename /home/rkeene/work/ke/ke-logo-big.png
+	lyxscale 12
+	scale 12
+	keepAspectRatio
+
+\end_inset 
+
+
 \layout Standard
 
 
@@ -43,10 +56,10 @@ Keene Enterprises
 
 \layout Chapter
 
-Introduction
+Overview
 \layout Standard
 
-Welcome to the SchoolWeb Application Framework Developers Manual.
+Welcome to the SchoolWeb Application Framework Developer's Manual.
 \layout Section
 
 Scope of This Document
@@ -80,7 +93,24 @@ httpd
 \begin_inset Quotes erd
 \end_inset 
 
- webserver.
+ web server.
+ Additionally, the database back-end uses 
+\begin_inset Quotes eld
+\end_inset 
+
+MySQL
+\begin_inset Quotes erd
+\end_inset 
+
+ and 
+\begin_inset Quotes eld
+\end_inset 
+
+Mysqltcl
+\begin_inset Quotes erd
+\end_inset 
+
+
 \layout Subsection
 
 Apache
@@ -93,76 +123,232 @@ mod_rivet
 \layout Standard
 
 mod_rivet version 0.4.1 or greater is required.
+\layout Subsection
+
+Mysqtcl
+\layout Standard
+
+Mysqltcl version 2.51 or greater is required.
 \layout Chapter
 
-Flow of Control
+Overview
 \layout Section
 
 Initialization
+\layout Section
+
+Output Generation
 \layout Section
 
 Persistent versus Non-persistent
 \layout Chapter
 
 Modules
+\layout Standard
+
+Modules are a key component in the SchoolWeb Application Framework.
+ They serve as an the event handlers and as the primary front-end control
+ mechanism.
+\layout Standard
+
+Each module requires its own namespace, which it will register with the
+ Modules package (see 
+\family typewriter 
+modules::register
+\family default 
+).
+\layout Standard
+
+A module must have an 
+\begin_inset Quotes eld
+\end_inset 
+
+init
+\begin_inset Quotes erd
+\end_inset 
+
+ function within its namespace.
+ The 
+\begin_inset Quotes eld
+\end_inset 
+
+init
+\begin_inset Quotes erd
+\end_inset 
+
+ function will be called upon registration and registration will fail if
+ the 
+\begin_inset Quotes eld
+\end_inset 
+
+init
+\begin_inset Quotes erd
+\end_inset 
+
+ function returns 0.
+\layout Standard
+
+Every function within the module namespace, except the 
+\begin_inset Quotes eld
+\end_inset 
+
+init
+\begin_inset Quotes erd
+\end_inset 
+
+ function, is subject to be called with exactly 1 argument -- the action
+ and list of sub-actions to process.
+ Each function within the module namespace should serve as an event handler.
+\layout Standard
+
+The default action for a module is 
+\begin_inset Quotes eld
+\end_inset 
+
+main
+\begin_inset Quotes erd
+\end_inset 
+
+.
+ It is recommended that every module provide a main function.
+ If a module registers an icon (using 
+\family typewriter 
+modules::register
+\family default 
+) then a 
+\begin_inset Quotes eld
+\end_inset 
+
+main
+\begin_inset Quotes erd
+\end_inset 
+
+ function must be provided.
+\layout Standard
+
+Functions which should not be exposed to raw interaction should be placed
+ in a package rather than a module.
+\layout Standard
+
+A module should never insert data into the output stream, but rather return
+ the name of a Rivet document to parse.
+ Returning an empty string indicates failure.
+ The name of the document to parse should be relative to the module's top-level
+ directory unless it begins with a 
+\begin_inset Quotes eld
+\end_inset 
+
+/
+\begin_inset Quotes erd
+\end_inset 
+
+.
+ If the returned filename begins with a 
+\begin_inset Quotes eld
+\end_inset 
+
+/
+\begin_inset Quotes erd
+\end_inset 
+
+ it indicates that the filename is relative to the SchoolWeb Application
+ Framework's top-level directory (or site-local directory).
 \layout Section
+
+Current Modules
+\layout Subsection
 
 User Administration
-\layout Section
+\layout Subsection
 
 Notes
-\layout Section
+\layout Subsubsection
+
+Not yet implemented
+\layout Subsection
 
 Workorder Viewer
-\layout Section
+\layout Subsubsection
+
+Not yet implemented
+\layout Subsection
 
 Workorder Placement
-\layout Section
+\layout Subsubsection
+
+Not yet implemented
+\layout Subsection
 
 Lesson Plans
-\layout Section
+\layout Subsubsection
+
+Not yet implemented
+\layout Subsection
 
 Calendar
-\layout Section
+\layout Subsubsection
+
+Not yet implemented
+\layout Subsection
 
 Homepages
-\layout Section
+\layout Subsubsection
+
+Not yet implemented
+\layout Subsection
 
 School Pages
 \layout Chapter
 
 Packages
+\layout Standard
+
+The basis for the entire application framework are the packages.
+ The packages are persistent and reside in their own namespaces.
+ The packages may have interdependencies, but they are required to resolve
+ these dependencies.
 \layout Section
 
 Database
 \layout Subsection
 
-db::create
+Overview
+\layout Standard
+
+The database package provides a clean and safe way to interact with a generic
+ database back-end.
+ Currently only the MySQL back-end is used.
+\layout Subsection
+
+Functions
 \layout Subsubsection
 
+db::create
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 db::create -dbname <dbname> -fields <fields_list>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 -dbname <dbname>
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 This required parameter specifies the name of the database to create.
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 -fields <field_list>
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
@@ -181,35 +367,42 @@ u (Unique)
 \end_deeper 
 \end_deeper 
 \end_deeper 
-\layout Subsubsection
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 This function returns 1 on success, 0 otherwise
 \layout Enumerate
 
-An error may be returned if the database backend could not be opened.
-\layout Subsubsection
+An error may be returned if the database back-end could not be opened.
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-db::set
+\end_deeper 
 \layout Subsubsection
 
+db::set
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 db::set -dbname <dbname> -field <fieldname> <fieldvalue> ?-where <expression>?
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 -dbname <dbname>
@@ -219,35 +412,43 @@ Arguments
 \layout Enumerate
 
 -where <expression>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 This function returns 1 on success, 0 otherwise.
 \layout Enumerate
 
-An error may be returned if the database backend could not be initialized.
-\layout Subsubsection
+An error may be returned if the database back-end could not be initialized.
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-db::unset
+\end_deeper 
 \layout Subsubsection
 
+db::unset
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 db::unset -dbname <dbname> -where <expression> ?-fields <field_list>?
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 -dbname <dbname>
@@ -257,36 +458,44 @@ Arguments
 \layout Enumerate
 
 -fields <field_list>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 This function returns 1 on success, 0 otherwise.
 \layout Enumerate
 
-An error may be returned if the database backend could not be initalized.
-\layout Subsubsection
+An error may be returned if the database back-end could not be initialized.
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-db::get
+\end_deeper 
 \layout Subsubsection
 
+db::get
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 db::get -dbname <dbname> ?-fields <field_list>? ?-where <expression>? ?-field
  <field>?
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 -dbname <dbname>
@@ -299,9 +508,11 @@ Arguments
 \layout Enumerate
 
 -field <field>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 This function returns a list or single value depending on the parameters
@@ -324,7 +535,7 @@ If the
 \begin_inset Quotes erd
 \end_inset 
 
- parameter is passed then this funtion returns a single value (unless the
+ parameter is passed then this function returns a single value (unless the
  
 \begin_inset Quotes eld
 \end_inset 
@@ -374,72 +585,146 @@ If the
 
  parameter is not passed, a list of whatever would normally be returned
  is returned each outer element refers to a single row in the database.
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-db::fields
+\end_deeper 
 \layout Subsubsection
 
+db::fields
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 db::fields -dbname <dbname>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 -dbname <dbname>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 This function returns a list of fields that a given database was created
  with.
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
+\end_deeper 
 \layout Section
 
 User
 \layout Subsection
 
-user::exists
+Overview
+\layout Standard
+
+The User package handles all details related to user management and authenticati
+on.
+\layout Standard
+
+The User package provides the concept of a 
+\begin_inset Quotes eld
+\end_inset 
+
+current user.
+\begin_inset Quotes erd
+\end_inset 
+
+ The current user can be set using 
+\family typewriter 
+user::setuid
+\family default 
+ and retrieved using 
+\family typewriter 
+user::getuid
+\family default 
+.
+ 
+\layout Standard
+
+Many User functions inspect the 
+\begin_inset Quotes eld
+\end_inset 
+
+current user
+\begin_inset Quotes erd
+\end_inset 
+
+ for the admin or root flags.
+\layout Standard
+
+The 
+\begin_inset Quotes eld
+\end_inset 
+
+root
+\begin_inset Quotes erd
+\end_inset 
+
+ flag is a special flag any user with the 
+\begin_inset Quotes eld
+\end_inset 
+
+root
+\begin_inset Quotes erd
+\end_inset 
+
+ flag is considered to have all flags except those with a negative bias.
+\layout Subsection
+
+Functions
 \layout Subsubsection
 
+user::exists
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 user::exists <uid>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 uid
 \begin_deeper 
-\begin_deeper 
 \layout Enumerate
 
-The user ID to check for existance.
+The user ID to check for existence.
 \end_deeper 
 \end_deeper 
-\layout Subsubsection
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 This function returns 1 if the UID exists in the user database.
@@ -447,206 +732,217 @@ This function returns 1 if the UID exists in the user database.
 \layout Enumerate
 
 An error may be returned if the database system fails.
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-user::getuid
+\end_deeper 
 \layout Subsubsection
 
+user::getuid
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 user::getuid ?username?
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 username
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 This optional parameter specifies a username to return the UID for.
 \end_deeper 
 \end_deeper 
-\layout Subsubsection
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 If no username parameter is passed this function returns the UID of the
  current user; otherwise,
 \layout Enumerate
 
-The UID is returned cooresponding to the specified username;
+The UID is returned corresponding to the specified username;
 \layout Enumerate
 
 On error 0 is returned.
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-user::getnam
+\end_deeper 
 \layout Subsubsection
 
+user::getnam
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 user::getnam <uid>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 uid
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 UID to return username for.
 \end_deeper 
 \end_deeper 
-\layout Subsubsection
-
-Return Value
 \layout Enumerate
 
-This function returns the username cooresponding to the UID passed;
+Return Value
 \begin_deeper 
+\layout Enumerate
+
+This function returns the username corresponding to the UID passed;
 \layout Enumerate
 
 An empty string is returned on error.
 \end_deeper 
-\layout Subsubsection
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-user::login
+\end_deeper 
 \layout Subsubsection
 
+user::login
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 user::login <uid> <password> <source>
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 uid
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 UID to verify credentials for.
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 password
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 Password to authenticate with.
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 source
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 Source address to login from.
 \end_deeper 
 \end_deeper 
-\layout Subsubsection
-
-Return Value
 \layout Enumerate
 
-On success 1 is reurned, otherwise 0 is returned.
-\layout Subsubsection
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
-
-user::create
+\end_deeper 
 \layout Subsubsection
 
+user::create
+\layout Enumerate
+
 Syntax
+\begin_deeper 
 \layout Enumerate
 
 
 \family typewriter 
 user::create -user <username> ?-name <fullname>? ?-flags <flag_list>? ?-opts
  <opt_list>? ?-pass <password>?
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Arguments
+\begin_deeper 
 \layout Enumerate
 
 -user <username>
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 This required parameter specifies the username for the newly created user.
  A user must not already exist with this username.
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 -name <fullname>
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 This parameter specifies the fullname field for the newly created user.
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 -flags <flag_list>
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
 This parameter allows you to create the user with an initial list of flags.
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 -opts <opt_list>
 \begin_deeper 
-\begin_deeper 
 \layout Enumerate
 
-This paramter allows you to create the user with an initial list of options.
+This parameter allows you to create the user with an initial list of options.
 \layout Enumerate
 
 The opt_list parameter is a list of lists.
@@ -660,11 +956,9 @@ field
 value
 \end_deeper 
 \end_deeper 
-\end_deeper 
 \layout Enumerate
 
 -pass <password>
-\begin_deeper 
 \begin_deeper 
 \layout Enumerate
 
@@ -674,203 +968,938 @@ This optional parameter specifies the initial password to set to.
 The password parameter is plain-text.
 \layout Enumerate
 
-If this parameter is omited the account is locked and no password will match
- it.
+If this parameter is omitted the account is locked and no password will
+ match it.
 \end_deeper 
 \end_deeper 
-\layout Subsubsection
+\layout Enumerate
 
 Return Value
+\begin_deeper 
 \layout Enumerate
 
 On success the UID of the user created is returned;
 \layout Enumerate
 
 0 is returned on failure to create a user.
-\layout Subsubsection
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
 \layout Enumerate
 
 (none)
-\layout Subsection
+\end_deeper 
+\layout Subsubsection
 
 user::delete
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::delete <uid>
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+uid
+\begin_deeper 
+\layout Enumerate
+
+The UID of the user to delete.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::change
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::change ?-uid <uid>? ?-user <username>? ?-name <fullname>? ?-flags
+ <flag_list>? ?-opts <opt_list>? ?-pass <password>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+-uid <uid>
+\begin_deeper 
+\layout Enumerate
+
+The UID parameter indicates the UID of the user to change.
+\layout Enumerate
+
+If the UID parameter is omitted the current UID (as returned from 
+\family typewriter 
+user::getuid
+\family default 
+ is used.)
+\end_deeper 
+\layout Enumerate
+
+-user <username>
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the specified user's username
+ should be changed to the value passed.
+\layout Enumerate
+
+The username specified MUST NOT already be used by another user.
+\end_deeper 
+\layout Enumerate
+
+-name <fullname>
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the specified user's fullname
+ should be changed to the value passed.
+\end_deeper 
+\layout Enumerate
+
+-flags <flag_list>
+\layout Enumerate
+
+-opts <opt_list>
+\layout Enumerate
+
+-pass <password>
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the specified user's password
+ should be changed to the value passed.
+\layout Enumerate
+
+If the password parameter is blank the account is locked and no password
+ will be valid for it.
+\layout Enumerate
+
+The password parameter should be the plain text password.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+Privileges:
+\begin_deeper 
+\layout Enumerate
+
+Admin
+\layout Enumerate
+
+Root
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
 
 user::get
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::get ?-uid {<uid>|ALL}? ?-user? ?-name? ?-flags? ?-opts? ?-uids? ?-pass?
+ ?-field <field>? ?-fields <field_list>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+-uid {<uid>|ALL}
+\begin_deeper 
+\layout Enumerate
+
+This parameter specifies the UID for which to return information on.
+\layout Enumerate
+
+If this parameter is omitted the current UID (as returned from 
+\family typewriter 
+user::getuid
+\family default 
+) is used.
+\layout Enumerate
+
+If the value passed to the parameter is 
+\begin_inset Quotes eld
+\end_inset 
+
+ALL
+\begin_inset Quotes erd
+\end_inset 
+
+ instead of a UID, this function returns a list whose elements correspond
+ to a single user.
+\end_deeper 
+\layout Enumerate
+
+-user
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the user's username should
+ be returned.
+\end_deeper 
+\layout Enumerate
+
+-name
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the user's fullname should
+ be returned.
+\end_deeper 
+\layout Enumerate
+
+-flags
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that a list containing the user's
+ flags should be returned.
+\end_deeper 
+\layout Enumerate
+
+-opts
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that a list containing a list of
+ the user's options should be returned.
+\end_deeper 
+\layout Enumerate
+
+-uids
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the user's UID should be returned
+\end_deeper 
+\layout Enumerate
+
+-pass
+\begin_deeper 
+\layout Enumerate
+
+The presence of this parameter indicates that the user's encrypted password
+ should be returned.
+\end_deeper 
+\layout Enumerate
+
+-field <field>
+\begin_deeper 
+\layout Enumerate
+
+This parameter indicates that the field specified by the value passed should
+ be returned, valid values are:
+\begin_deeper 
+\layout Enumerate
+
+uid
+\layout Enumerate
+
+user
+\layout Enumerate
+
+name
+\layout Enumerate
+
+flags
+\layout Enumerate
+
+opts
+\layout Enumerate
+
+pass
+\end_deeper 
+\layout Enumerate
+
+This is proper way to request a variable single field name.
+\end_deeper 
+\layout Enumerate
+
+-fields <field_list>
+\begin_deeper 
+\layout Enumerate
+
+This parameter indicates that the fields specified in the value passed should
+ be returned.
+\layout Enumerate
+
+This is the proper way to request multiple variable field names.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+This function returns the request field or fields for the specified user
+ or all users;
+\layout Enumerate
+
+This may be a string or list depending on what is requested:
+\begin_deeper 
+\layout Enumerate
+
+A single string is returned IF:
+\begin_deeper 
+\layout Enumerate
+
+The specified UID is NOT 
+\begin_inset Quotes eld
+\end_inset 
+
+ALL
+\begin_inset Quotes erd
+\end_inset 
+
+; and
+\layout Enumerate
+
+A single field is requested; and
+\layout Enumerate
+
+The 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is not passed.
+\end_deeper 
+\layout Enumerate
+
+A list of strings (one per item) is returned IF:
+\begin_deeper 
+\layout Enumerate
+
+The specified UID is NOT 
+\begin_inset Quotes eld
+\end_inset 
+
+ALL
+\begin_inset Quotes erd
+\end_inset 
+
+; and
+\layout Enumerate
+
+Multiple fields are requested; or
+\layout Enumerate
+
+The 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is passed.
+\end_deeper 
+\layout Enumerate
+
+A list of strings (one per user) is returned IF:
+\begin_deeper 
+\layout Enumerate
+
+The specified UID is 
+\begin_inset Quotes eld
+\end_inset 
+
+ALL
+\begin_inset Quotes erd
+\end_inset 
+
+; and
+\layout Enumerate
+
+A single field is requested; and
+\layout Enumerate
+
+The 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is not passed.
+\end_deeper 
+\layout Enumerate
+
+A list of lists is returned IF:
+\begin_deeper 
+\layout Enumerate
+
+The specified UID is 
+\begin_inset Quotes eld
+\end_inset 
+
+ALL
+\begin_inset Quotes erd
+\end_inset 
+
+; and
+\layout Enumerate
+
+Multiple fields are requested; or
+\layout Enumerate
+
+The 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is passed.
+\end_deeper 
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+The fields requested will be in the same order in which they are requested;
+\layout Enumerate
+
+Mixing usage of the 
+\begin_inset Quotes eld
+\end_inset 
+
+-field
+\begin_inset Quotes erd
+\end_inset 
+
+ and 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameters in a single command is prohibited.
+\end_deeper 
+\layout Subsubsection
 
 user::setflag
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::setflag <newflags> ?<uid>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+newflags
+\begin_deeper 
+\layout Enumerate
+
+This parameter is a list of flags which should be set for this function
+ to return successfully.
+\end_deeper 
+\layout Enumerate
+
+uid
+\begin_deeper 
+\layout Enumerate
+
+This optional parameter indicates the UID of the user to modify.
+\layout Enumerate
+
+If this parameter is omitted the current user's UID (as returned by 
+\family typewriter 
+user::getuid
+\family default 
+) is used.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+Privileges:
+\begin_deeper 
+\layout Enumerate
+
+Admin
+\layout Enumerate
+
+Root
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
 
 user::hasflag
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::hasflag <flags> ?<uid>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+flags
+\begin_deeper 
+\layout Enumerate
+
+This parameter contains a list of flags to compare against the specified
+ user's flags.
+\end_deeper 
+\layout Enumerate
+
+uid
+\begin_deeper 
+\layout Enumerate
+
+This optional parameter indicates the UID of the user to check.
+\layout Enumerate
+
+If this parameter is omitted the current user's UID (as returned by 
+\family typewriter 
+user::getuid
+\family default 
+) is used.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::unsetflag
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::unsetflag <flags> ?<uid>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+flags
+\layout Enumerate
+
+uid
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::setopt
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::setopt <optname> <optvalue> ?<uid>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+optname
+\layout Enumerate
+
+optvalue
+\layout Enumerate
+
+uid
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::getopt
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::getopt <optname> ?<uid>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+optname
+\layout Enumerate
+
+uid
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+A string containing the value of the specified option for the specified
+ user;
+\layout Enumerate
+
+If no such value could be found an empty string is returned.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::listopt
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::listopt <opt> ?<value>?
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+opt
+\layout Enumerate
+
+value
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+This function returns a list of UIDs which correspond to users who have
+ the option 
+\begin_inset Quotes eld
+\end_inset 
+
+opt
+\begin_inset Quotes erd
+\end_inset 
+
+ and have it set to the value of 
+\begin_inset Quotes eld
+\end_inset 
+
+value
+\begin_inset Quotes erd
+\end_inset 
+
+ if the value parameter is passed.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::listflag
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::listflag <flag>
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+flag
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+This function returns a list of UIDs corresponding to users who have the
+ specified flag set;
+\layout Enumerate
+
+An empty list indicates that no such users could be found.
+\end_deeper 
+\layout Enumerate
 
 Notes
-\layout Subsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 user::flaglist
-\layout Subsubsection
+\layout Enumerate
 
 Syntax
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::flaglist
+\end_deeper 
+\layout Enumerate
 
 Arguments
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Enumerate
 
 Return Value
-\layout Subsubsection
+\begin_deeper 
+\layout Enumerate
+
+This function returns a list of all acceptable flags.
+\end_deeper 
+\layout Enumerate
 
 Notes
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
+
+user::setuid
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+user::setuid <uid>
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+uid
+\begin_deeper 
+\layout Enumerate
+
+This parameter indicates the UID to change to.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+If the UID has already been set and the current user lacks the 
+\begin_inset Quotes eld
+\end_inset 
+
+root
+\begin_inset Quotes erd
+\end_inset 
+
+ flag this call will fail;
+\layout Enumerate
+
+The 
+\family typewriter 
+user::login
+\family default 
+ function sets the current user.
+\end_deeper 
 \layout Section
 
 Session
 \layout Subsection
 
-session::create
+Overview
 \layout Subsection
+
+Functions
+\layout Subsubsection
+
+session::create
+\layout Subsubsection
 
 session::destroy
-\layout Subsection
+\layout Subsubsection
 
 session::load
-\layout Subsection
+\layout Subsubsection
 
 session::save
 \layout Section
@@ -878,14 +1907,20 @@ session::save
 Module
 \layout Subsection
 
-module::register
+Overview
 \layout Subsection
+
+Functions
+\layout Subsubsection
+
+module::register
+\layout Subsubsection
 
 module::list
-\layout Subsection
+\layout Subsubsection
 
 module::info
-\layout Subsection
+\layout Subsubsection
 
 module::unregister
 \layout Section
@@ -893,41 +1928,506 @@ module::unregister
 UUID
 \layout Subsection
 
-uuid::gen
+Overview
 \layout Subsection
+
+Functions
+\layout Subsubsection
+
+uuid::gen
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+uuid::gen ?<prefix>?
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+prefix
+\begin_deeper 
+\layout Enumerate
+
+This optional parameter indicates the numeric or symbolic prefix to generate
+ the UUID in.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+This function returns a 
+\emph on 
+Universally Unique IDentifier
+\emph default 
+;
+\layout Enumerate
+
+If the prefix is omitted, 0 is used.
+\layout Enumerate
+
+On error the invalid UUID of 0 is returned.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 uuid::register
-\layout Subsection
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+uuid::register <prefix> <type> ?<module>?
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+prefix
+\layout Enumerate
+
+type
+\layout Enumerate
+
+module
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+On success 1 is returned, otherwise 0 is returned.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 uuid::type
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+uuid::type <uuid>
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+uuid
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+This function returns the previously register symbolic name associated with
+ the specified UUID's prefix;
+\layout Enumerate
+
+If no such symbolic name could be found the string 
+\begin_inset Quotes eld
+\end_inset 
+
+unknown
+\begin_inset Quotes erd
+\end_inset 
+
+ is returned.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
 \layout Section
 
 Notes
-\layout Standard
+\layout Subsection
 
-(not yet implemented)
+Overview
+\layout Subsection
+
+Functions
+\layout Subsubsection
+
+note::send
+\layout Subsubsection
+
+note::list
+\layout Subsubsection
+
+note::delete
+\layout Subsubsection
+
+note::foldercreate
+\layout Subsubsection
+
+note::folderlist
+\layout Subsubsection
+
+note::folderdelete
+\layout Subsubsection
+
+note::folderrename
+\layout Subsubsection
+
+note::copy
 \layout Section
 
 Workorders
-\layout Standard
+\layout Subsection
 
-(not yet implemented)
+Not yet implemented.
 \layout Section
 
 Hooks
 \layout Subsection
 
+Functions
+\layout Subsubsection
+
 hook::register
-\layout Subsection
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+hook::register <id> <callback>
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+id
+\begin_deeper 
+\layout Enumerate
+
+Identifier which will trigger callback mechanism.
+\layout Enumerate
+
+This may be a wild-card.
+\end_deeper 
+\layout Enumerate
+
+callback
+\begin_deeper 
+\layout Enumerate
+
+Function to be called.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+This function returns 1 on success, 0 otherwise.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+The callback function should accept three arguments:
+\begin_deeper 
+\layout Enumerate
+
+Actual Identifier
+\layout Enumerate
+
+Registered Identifier
+\layout Enumerate
+
+Argument List
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
 
 hook::call
-\layout Subsection
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+hook::call <id> parameters ...
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+id
+\begin_deeper 
+\layout Enumerate
+
+Identifier for which to invoke callbacks for.
+\end_deeper 
+\layout Enumerate
+
+parameters ...
+\begin_deeper 
+\layout Enumerate
+
+Parameters list to pass as the third argument to any callback functions.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+This function returns the number of callback functions which successfully
+ handled this event.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+(none)
+\end_deeper 
+\layout Subsubsection
 
 hook::unregister
+\layout Enumerate
+
+Syntax
+\begin_deeper 
+\layout Enumerate
+
+
+\family typewriter 
+hook::unregister ?<id>? ?<callback>?
+\end_deeper 
+\layout Enumerate
+
+Arguments
+\begin_deeper 
+\layout Enumerate
+
+id
+\begin_deeper 
+\layout Enumerate
+
+Identifier for which to unregister callbacks for.
+\layout Enumerate
+
+If this parameter is an empty string or omitted, all identifiers are considered
+ for removal.
+\end_deeper 
+\layout Enumerate
+
+callback
+\begin_deeper 
+\layout Enumerate
+
+Callback function which to remove from list of registered callbacks.
+\layout Enumerate
+
+If this parameter is an empty string or omitted, all callbacks are considered
+ for removal.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+Return Value
+\begin_deeper 
+\layout Enumerate
+
+This function returns 1 on success, 0 otherwise.
+\end_deeper 
+\layout Enumerate
+
+Notes
+\begin_deeper 
+\layout Enumerate
+
+With no arguments all callbacks for all identifiers are removed.
+\end_deeper 
+\layout Section
+
+Files
+\layout Subsection
+
+Overview
+\layout Subsection
+
+Functions
+\layout Subsubsection
+
+file::create
+\layout Subsubsection
+
+file::list
+\layout Subsubsection
+
+file::delete
+\layout Subsubsection
+
+file::rename
+\layout Subsubsection
+
+file::get
+\layout Subsubsection
+
+file::give
+\layout Subsubsection
+
+file::take
+\layout Subsubsection
+
+file::readable
+\layout Subsubsection
+
+file::writable
+\layout Subsubsection
+
+file::gets
+\layout Subsubsection
+
+file::puts
+\layout Section
+
+Calendar
+\layout Subsection
+
+Overview
+\layout Subsection
+
+Functions
+\layout Subsubsection
+
+calendar::create
+\layout Subsubsection
+
+calendar::change
+\layout Subsubsection
+
+calendar::get
+\layout Subsubsection
+
+calendar::generate
+\layout Subsubsection
+
+calendar::entry
 \layout Chapter
 \start_of_appendix 
 Terminology
 \layout Chapter
 
+Support
+\layout Section
+
+Support Information
+\layout Subsection
+
+Contact
+\layout Enumerate
+
+
+\begin_inset LatexCommand \htmlurl[email:]{mailto:support@keene-enterprises.com}
+
+\end_inset 
+
+
+\layout Enumerate
+
+
+\begin_inset LatexCommand \htmlurl[web:]{http://www.keene-enterprises.com/webapp/support/}
+
+\end_inset 
+
+
+\layout Enumerate
+
+phone: (228) 547-8915
+\layout Subsection
+
+License Information
+\layout Enumerate
+
+License Number: 
+\layout Enumerate
+
+Installation Name:
+\layout Chapter
+
 License
+\layout Standard
+
+Copyright (c) 2004, 2005 
+\noun on 
+Keene Enterprises
+\layout Standard
+
+Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sub-license,
+ and/or sell copies of the Software, and to permit persons to whom the Software
+ is furnished to do so, subject to the following conditions:
+\layout Itemize
+
+The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+\layout Standard
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE
+, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
 \the_end
