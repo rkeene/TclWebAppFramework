@@ -3,7 +3,7 @@ package provide db 0.1
 namespace eval db {
 
 ##########################################################################
-# Proc: getuuid
+# Proc: genuuid
 # Args: 
 #       *prefix            Optional prefix
 # Rets: A Universally Unique ID on success, 0 on failure
@@ -11,7 +11,7 @@ namespace eval db {
 # Othr: (null)
 # Stat: Complete
 ##########################################################################
-proc getuuid {{prefix 0}} {
+proc genuuid {{prefix 0}} {
   ::set uuid [format "%x-%x-%x-%x" $prefix [clock clicks] [clock seconds] [clock clicks] [pid]]
   return $uuid
 }
