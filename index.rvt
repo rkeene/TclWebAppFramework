@@ -36,7 +36,10 @@ if {[catch {
 
 	# Go no further with a UID.
 	if {![info exists ::session::vars(uid)]} {
-		abort_page
+		set ::session::vars(uid) 0
+	}
+	if {$::session::vars(uid) == 0} {
+		set module "login"
 	}
 
 	# Do the header and footer init stuff only once.
