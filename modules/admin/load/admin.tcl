@@ -188,6 +188,16 @@ namespace eval admin {
 					}
 				}
 				if {[info exists ::request::args(set_update_flags)]} {
+
+					# If the value wasn't even specified, set it to unset.
+					foreach flag [user::flaglist] {
+						set flag [lindex [split $flag :] 0]
+						if {[lsearch -exact [array names ::request::args] "set_flag_${flag}"] == -1} {
+							set ::request::args(set_flag_${flag}) "unset"
+						}
+					}
+
+					# Handle the `set_flag_*' values.
 					foreach var [array names ::request::args] {
 						if {![string match "set_flag_*" $var]} {
 							continue

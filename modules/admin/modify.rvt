@@ -90,25 +90,7 @@ if {[info exists ::request::args(set_password)]} {
     <td>
       <table>
 <?
-	# Generate a list of flags from all the modules
-	# that are registered and all the users flags as well.
-	set flags ""
-	foreach modinfo [module::list -all] {
-		set modflags [lindex $modinfo 1]
-		foreach modflag $modflags {
-			if {[lsearch -exact $flags $modflag] == -1} {
-				lappend flags $modflag
-			}
-		}
-	}
-	foreach userflags [user::get -uid ALL -flags] {
-		foreach userflag $userflags {
-			if {[lsearch -exact $flags $userflag] == -1 && [lsearch -exact $flags "$userflag:u"] == -1} {
-				lappend flags "$userflag:u"
-			}
-		}
-	}
-	foreach flag [lsort -dictionary $flags] {
+	foreach flag [user::flaglist] {
 		set flaginfo [lindex [split $flag :] 1]
 		set flag [lindex [split $flag :] 0]
 		set extra ""

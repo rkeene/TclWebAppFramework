@@ -1,9 +1,9 @@
+package provide db 0.2
+
 package require mysqltcl
 package require hook
 package require debug
 package require uuid
-
-package provide db 0.2
 
 namespace eval db {
 	# Proc: ::db::sqlquote

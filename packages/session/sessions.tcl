@@ -1,7 +1,7 @@
+package provide session 0.3
+
 package require db
 package require uuid
-
-package provide session 0.3
 
 uuid::register 110 session
 

@@ -1,10 +1,10 @@
+package provide uuid 0.3
+
 if {[catch {
 	package require Tclx
 }]} {
 	package require Tclx-compat
 }
-
-package provide uuid 0.3
 
 namespace eval uuid {
 	set types(unknown) 0

@@ -1,6 +1,6 @@
-package require user
-
 package provide module 0.1
+
+package require user
 
 namespace eval module {
 	# Name: ::module::register

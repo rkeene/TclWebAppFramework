@@ -1,5 +1,3 @@
-#! /usr/bin/tclsh
-
 package provide hook 0.1
 
 namespace eval hook {

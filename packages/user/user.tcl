@@ -1,9 +1,10 @@
+package provide user 0.1
+
 package require db
 package require hook
 package require crypt
 package require uuid
-
-package provide user 0.1
+package require module
 
 uuid::register 11 user
 
@@ -561,5 +562,34 @@ namespace eval user {
 		hook::call user::listflag::enter $ret $flag
 
 		return $ret
+	}
+
+	# Name: ::user::flaglist
+	# Args: (none)
+	# Rets: List of flags that are available from either modules or
+	#	attached to a user.  `:u' will be appened to the flag
+	#	if it's not associated with any module.
+	# Stat: In progress
+	proc flaglist {} {
+		set flags "root"
+
+		foreach modinfo [module::list -all] {
+			set modflags [lindex $modinfo 1]
+			foreach modflag $modflags {
+				if {[lsearch -exact $flags $modflag] == -1} {
+					lappend flags $modflag
+				}
+			}
+		}
+
+		foreach userflags [user::get -uid ALL -flags] {
+			foreach userflag $userflags {
+				if {[lsearch -exact $flags $userflag] == -1 && [lsearch -exact $flags "$userflag:u"] == -1} {
+					lappend flags "$userflag:u"
+				}
+			}
+		}
+
+		return [lsort -dictionary $flags]
 	}
 }
