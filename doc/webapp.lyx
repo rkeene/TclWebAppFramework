@@ -83,16 +83,16 @@ httpd
  webserver.
 \layout Subsection
 
+Apache
+\layout Standard
+
+Apache version 1.3.29 or greater is required.
+\layout Subsection
+
 mod_rivet
 \layout Standard
 
 mod_rivet version 0.4.1 or greater is required.
-\layout Subsection
-
-Apache
-\layout Standard
-
-Apache 1.3.29 or greater is required.
 \layout Chapter
 
 Flow of Control
@@ -135,138 +135,178 @@ Packages
 \layout Section
 
 Database
-\layout Subsubsection
+\layout Subsection
 
 db::create
-\layout Paragraph
+\layout Subsubsection
 
 Syntax
-\layout Standard
+\layout Enumerate
 
+
+\family typewriter 
 db::create -dbname <dbname> -fields <fields_list>
-\layout Paragraph
+\layout Subsubsection
 
 Arguments
-\layout Itemize
+\layout Enumerate
 
 -dbname <dbname>
-\layout Itemize
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This required parameter specifies the name of the database to create.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
 
 -fields <field_list>
-\layout Paragraph
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This required parameter specifies the list of fields.
+\layout Enumerate
+
+Any element in the list may contain a colon (:) followed by any of the following
+:
+\begin_deeper 
+\layout Enumerate
+
+pk (Primary Key)
+\layout Enumerate
+
+u (Unique)
+\end_deeper 
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
 
 Return Value
-\layout Standard
+\layout Enumerate
 
-This function returns 1 on success, 0 otherwise.
- An error may be returned if the database backend could not be opened.
-\layout Paragraph
+This function returns 1 on success, 0 otherwise
+\layout Enumerate
+
+An error may be returned if the database backend could not be opened.
+\layout Subsubsection
 
 Notes
-\layout Standard
+\layout Enumerate
 
 (none)
-\layout Subsubsection
+\layout Subsection
 
 db::set
-\layout Paragraph
+\layout Subsubsection
 
 Syntax
-\layout Standard
+\layout Enumerate
 
+
+\family typewriter 
 db::set -dbname <dbname> -field <fieldname> <fieldvalue> ?-where <expression>?
-\layout Paragraph
+\layout Subsubsection
 
 Arguments
-\layout Itemize
+\layout Enumerate
 
 -dbname <dbname>
-\layout Itemize
+\layout Enumerate
 
 -field <fieldname> <fieldvalue>
-\layout Itemize
+\layout Enumerate
 
 -where <expression>
-\layout Paragraph
+\layout Subsubsection
 
 Return Value
-\layout Standard
+\layout Enumerate
 
 This function returns 1 on success, 0 otherwise.
- An error may be returned if the database backend could not be initialized.
-\layout Paragraph
+\layout Enumerate
+
+An error may be returned if the database backend could not be initialized.
+\layout Subsubsection
 
 Notes
-\layout Standard
+\layout Enumerate
 
 (none)
-\layout Subsubsection
+\layout Subsection
 
 db::unset
-\layout Paragraph
-
-Syntax
-\layout Standard
-
-db::unset -dbname <dbname> -where <expression> ?-fields <field_list>?
-\layout Paragraph
-
-Arguments
-\layout Itemize
-
--dbname <dbname>
-\layout Itemize
-
--where <expression>
-\layout Itemize
-
--fields <field_list>
-\layout Paragraph
-
-Return Value
-\layout Standard
-
-This function returns 1 on success, 0 otherwise.
- An error may be returned if the database backend could not be initalized.
-\layout Paragraph
-
-Notes
-\layout Standard
-
-(none)
 \layout Subsubsection
 
-db::get
-\layout Paragraph
-
 Syntax
-\layout Standard
+\layout Enumerate
 
-db::get -dbname <dbname> ?-fields <field_list>? ?-where <expression>? ?-field
- <field>?
-\layout Paragraph
+
+\family typewriter 
+db::unset -dbname <dbname> -where <expression> ?-fields <field_list>?
+\layout Subsubsection
 
 Arguments
-\layout Itemize
+\layout Enumerate
 
 -dbname <dbname>
-\layout Itemize
-
--fields <field_list>
-\layout Itemize
+\layout Enumerate
 
 -where <expression>
-\layout Itemize
+\layout Enumerate
 
--field <field>
-\layout Paragraph
+-fields <field_list>
+\layout Subsubsection
 
 Return Value
-\layout Standard
+\layout Enumerate
+
+This function returns 1 on success, 0 otherwise.
+\layout Enumerate
+
+An error may be returned if the database backend could not be initalized.
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Subsection
+
+db::get
+\layout Subsubsection
+
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+db::get -dbname <dbname> ?-fields <field_list>? ?-where <expression>? ?-field
+ <field>?
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+-dbname <dbname>
+\layout Enumerate
+
+-fields <field_list>
+\layout Enumerate
+
+-where <expression>
+\layout Enumerate
+
+-field <field>
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
 
 This function returns a list or single value depending on the parameters
  passed.
-\layout Standard
+\layout Enumerate
 
 If the 
 \begin_inset Quotes eld
@@ -294,7 +334,7 @@ If the
 \end_inset 
 
  parameter is not passed).
-\layout Standard
+\layout Enumerate
 
 If the 
 \begin_inset Quotes eld
@@ -322,7 +362,7 @@ If the
 \end_inset 
 
  parameter is not passed, then a list of lists is returned).
-\layout Standard
+\layout Enumerate
 
 If the 
 \begin_inset Quotes eld
@@ -334,155 +374,554 @@ If the
 
  parameter is not passed, a list of whatever would normally be returned
  is returned each outer element refers to a single row in the database.
-\layout Paragraph
-
-Notes
-\layout Standard
-
-(none)
 \layout Subsubsection
 
-db::fields
-\layout Paragraph
-
-Syntax
-\layout Standard
-
-db::fields -dbname <dbname>
-\layout Paragraph
-
-Arguments
-\layout Itemize
-
--dbname <dbname>
-\layout Paragraph
-
-Return Value
-\layout Standard
-
-This function returns a list of fields that a given database was created
- with.
-\layout Paragraph
-
 Notes
-\layout Standard
+\layout Enumerate
 
 (none)
 \layout Subsection
 
-User
+db::fields
 \layout Subsubsection
+
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+db::fields -dbname <dbname>
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+-dbname <dbname>
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
+
+This function returns a list of fields that a given database was created
+ with.
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Section
+
+User
+\layout Subsection
 
 user::exists
 \layout Subsubsection
 
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+user::exists <uid>
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+uid
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+The user ID to check for existance.
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
+
+This function returns 1 if the UID exists in the user database.
+ 0 if there is no such user or if the UID is invalid.
+\layout Enumerate
+
+An error may be returned if the database system fails.
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Subsection
+
 user::getuid
 \layout Subsubsection
+
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+user::getuid ?username?
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+username
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This optional parameter specifies a username to return the UID for.
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
+
+If no username parameter is passed this function returns the UID of the
+ current user; otherwise,
+\layout Enumerate
+
+The UID is returned cooresponding to the specified username;
+\layout Enumerate
+
+On error 0 is returned.
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Subsection
 
 user::getnam
 \layout Subsubsection
 
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+user::getnam <uid>
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+uid
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+UID to return username for.
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
+
+This function returns the username cooresponding to the UID passed;
+\begin_deeper 
+\layout Enumerate
+
+An empty string is returned on error.
+\end_deeper 
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Subsection
+
 user::login
 \layout Subsubsection
+
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+user::login <uid> <password> <source>
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+uid
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+UID to verify credentials for.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+password
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+Password to authenticate with.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+source
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+Source address to login from.
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
+
+On success 1 is reurned, otherwise 0 is returned.
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Subsection
 
 user::create
 \layout Subsubsection
 
+Syntax
+\layout Enumerate
+
+
+\family typewriter 
+user::create -user <username> ?-name <fullname>? ?-flags <flag_list>? ?-opts
+ <opt_list>? ?-pass <password>?
+\layout Subsubsection
+
+Arguments
+\layout Enumerate
+
+-user <username>
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This required parameter specifies the username for the newly created user.
+ A user must not already exist with this username.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+-name <fullname>
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This parameter specifies the fullname field for the newly created user.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+-flags <flag_list>
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This parameter allows you to create the user with an initial list of flags.
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+-opts <opt_list>
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This paramter allows you to create the user with an initial list of options.
+\layout Enumerate
+
+The opt_list parameter is a list of lists.
+ Each inner list contains two elements:
+\begin_deeper 
+\layout Enumerate
+
+field
+\layout Enumerate
+
+value
+\end_deeper 
+\end_deeper 
+\end_deeper 
+\layout Enumerate
+
+-pass <password>
+\begin_deeper 
+\begin_deeper 
+\layout Enumerate
+
+This optional parameter specifies the initial password to set to.
+\layout Enumerate
+
+The password parameter is plain-text.
+\layout Enumerate
+
+If this parameter is omited the account is locked and no password will match
+ it.
+\end_deeper 
+\end_deeper 
+\layout Subsubsection
+
+Return Value
+\layout Enumerate
+
+On success the UID of the user created is returned;
+\layout Enumerate
+
+0 is returned on failure to create a user.
+\layout Subsubsection
+
+Notes
+\layout Enumerate
+
+(none)
+\layout Subsection
+
 user::delete
 \layout Subsubsection
+
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
 
 user::change
 \layout Subsubsection
 
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
+
 user::get
 \layout Subsubsection
+
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
 
 user::setflag
 \layout Subsubsection
 
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
+
 user::hasflag
 \layout Subsubsection
+
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
 
 user::unsetflag
 \layout Subsubsection
 
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
+
 user::setopt
 \layout Subsubsection
+
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
 
 user::getopt
 \layout Subsubsection
 
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
+
 user::listopt
 \layout Subsubsection
+
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Subsection
 
 user::listflag
 \layout Subsubsection
 
-user::flaglist
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
 \layout Subsection
+
+user::flaglist
+\layout Subsubsection
+
+Syntax
+\layout Subsubsection
+
+Arguments
+\layout Subsubsection
+
+Return Value
+\layout Subsubsection
+
+Notes
+\layout Section
 
 Session
-\layout Subsubsection
+\layout Subsection
 
 session::create
-\layout Subsubsection
+\layout Subsection
 
 session::destroy
-\layout Subsubsection
+\layout Subsection
 
 session::load
-\layout Subsubsection
+\layout Subsection
 
 session::save
-\layout Subsection
+\layout Section
 
 Module
-\layout Subsubsection
+\layout Subsection
 
 module::register
-\layout Subsubsection
+\layout Subsection
 
 module::list
-\layout Subsubsection
+\layout Subsection
 
 module::info
-\layout Subsubsection
+\layout Subsection
 
 module::unregister
-\layout Subsection
+\layout Section
 
 UUID
-\layout Subsubsection
+\layout Subsection
 
 uuid::gen
-\layout Subsubsection
+\layout Subsection
 
 uuid::register
-\layout Subsubsection
+\layout Subsection
 
 uuid::type
-\layout Subsection
+\layout Section
 
 Notes
 \layout Standard
 
 (not yet implemented)
-\layout Subsection
+\layout Section
 
 Workorders
 \layout Standard
 
 (not yet implemented)
-\layout Subsection
+\layout Section
 
 Hooks
-\layout Subsubsection
+\layout Subsection
 
 hook::register
-\layout Subsubsection
+\layout Subsection
 
 hook::call
-\layout Subsubsection
+\layout Subsection
 
 hook::unregister
 \layout Chapter
