@@ -95,6 +95,13 @@ if {[catch {
 		set newpage [module::call $::session::vars(uid) $module "" $subaction]
 	}
 
+	# Assume a blank return value means
+	# that the user is required to authenticate?
+	if {$newpage == ""} {
+		set module "login"
+		set newpage [module::call $::session::vars(uid) login "" ""]
+	}
+
 	foreach {headmod header} $::headers {
 		debug::log index.rvt "Displaying $header/$headmod"
 		display $header $headmod
