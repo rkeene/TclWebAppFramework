@@ -1,4 +1,4 @@
-namespace eval workorder {
+namespace eval workordersend {
 	proc init {} {
 		return 1
 	}
@@ -7,4 +7,4 @@ namespace eval workorder {
 	}
 }
 
-module::register workorder [list workorder] workorder.png "Send a Work Order"
+module::register workordersend [list workorder] workordersend.png "Send a Work Order"
