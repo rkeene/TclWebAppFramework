@@ -30,8 +30,15 @@ if {[catch {
 
 	set state INIT
 	foreach file [glob -nocomplain modules/load/*.tcl modules/autoload/*.tcl local/modules/load/*.tcl local/modules/autoload/*.tcl] {
+		debug::log index.rvt "source $file"
 		source $file
 	}
+
+	# Go no further with a UID.
+	if {![info exists ::session::vars(uid)]} {
+		abort_page
+	}
+
 	# Do the header and footer init stuff only once.
 	if {![info exists ::finimods]} {
 		set ::finimods ""
