@@ -13,7 +13,7 @@ namespace eval db {
 		return $uuid
 	}
 
-	# Proc: sqlquote
+	# Proc: ::db::sqlquote
 	# Args: 
 	#	str		String to be quoted
 	# Rets: An SQL-safe-for-assignment string.
@@ -76,8 +76,8 @@ namespace eval db {
 
 	# Name: ::db::create
 	# Args: (dash method)
-	#	-dbname		Name of database to create.
-	#	-fields		List of columns in the database.
+	#	-dbname name	Name of database to create.
+	#	-fields list	List of columns in the database.
 	# Rets: 1 on success (the database now exists with those fields)
 	# Stat: Complete.
 	proc create args {
@@ -95,49 +95,67 @@ namespace eval db {
 		}
 
 		foreach field $fields {
-			lappend fieldlist "$field LONGBLOB"
+			::set fieldwork [split $field :]
+			::set fieldname [lindex $fieldwork 0]
+			::set fieldinfo [lindex $fieldwork 1]
+			switch -- $fieldinfo {
+				"pk" {
+					::set type($fieldname) "VARCHAR(255) PRIMARY KEY"
+					::set havekey 1
+				}
+				"k" {
+					::set type($fieldname) "VARCHAR(255) KEY"
+					::set havekey 1
+				}
+				default {
+					::set type($fieldname) "LONGBLOB"
+				}
+			}
+
+			lappend newfields $fieldname
+		}
+		if {![info exists havekey]} {
+			::set type([lindex $newfields 0]) "VARCHAR(255) PRIMARY KEY"
+		}
+		foreach field $newfields {
+			lappend fieldlist "$field $type($field)"
 		}
 
 		::set dbhandle [connect]
-		mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist ,]);"
+		mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
 
 		return 1
 	}
 
 	# Name: ::db::set
 	# Args: (dash method)
-	#	-dbname		Name of database to modify
-	#	-field		Field to modify
-	#	-where		Conditions to decide where to modify
-	#	?--?		End of options
-	#	value		Value to set matching records to
+	#	-dbname	name	Name of database to modify
+	#	-field name value Field to modify
+	#	?-where	cond?	Conditions to decide where to modify
 	# Rets: 1 on success, 0 otherwise.
-	# Stat: Complete.
+	# Stat: In progress
 	proc set args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
 		::set fieldidx [expr [lsearch -exact $args "-field"] + 1]
 		::set whereidx [expr [lsearch -exact $args "-where"] + 1]
-		::set stopidx [expr [lsearch -exact $args "--"] + 1]
 
-		if {$stopidx == 0} {
-			::set stopidx [expr [lindex [lsort -integer [list $dbnameidx $fieldidx $whereidx]] end] + 1]
-		}
-		if {$dbnameidx > $stopidx || $dbnameidx == 0} {
+		if {$dbnameidx == 0} {
 			return -code error "error: You must specify a dbname with -dbname."
 		}
-		if {$fieldidx > $stopidx || $fieldidx == 0} {
-			return -code error "error: You must specify a field with -field."
+		if {$fieldidx == 0} {
+			return -code error "error: You must specify atleast one field with -field."
 		}
-		if {$whereidx > $stopidx} {
-			::set whereidx 0
-		}
-
 		if {$whereidx != 0} {
 			::set where [lindex $args $whereidx]
 		}
 		::set dbname [lindex $args $dbnameidx]
-		::set field [lindex $args $fieldidx]
-		::set value [lindex $args $stopidx]
+		foreach fieldidx [lsearch -all -exact $args "-field"] {
+			::set fieldname [lindex $args [expr $fieldidx + 1]]
+			::set fieldvalue [lindex $args [expr $fieldidx + 2]]
+			lappend fielddata [list $fieldname $fieldvalue]
+			lappend fieldnames $fieldname
+			lappend fieldvalues [sqlquote $fieldvalue]
+		}
 
 		::set dbhandle [connect]
 
@@ -146,9 +164,35 @@ namespace eval db {
 			::set wherevar [lindex $wherework 0]
 			::set whereval [join [lrange $wherework 1 end] =]
 			::unset wherework
-			::set ret [mysqlexec $dbhandle "UPDATE $dbname SET $field=[sqlquote $value] WHERE $wherevar=[sqlquote $whereval];"]
+			foreach fieldpair $fielddata {
+				::set fieldname [lindex $fieldpair 0]
+				::set fieldvalue [lindex $fieldpair 1]
+				lappend fieldassignlist "$fieldname=[sqlquote $fieldvalue]"
+			}
+			::set ret [mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"]
 		} else {
-			::set ret [mysqlexec $dbhandle "INSERT INTO $dbname ($field) VALUES ([sqlquote $value]);"]
+			if {[catch {
+				::set ret [mysqlexec $dbhandle "INSERT INTO $dbname ([join $fieldnames {, }]) VALUES ([join $fieldvalues {, }]);"]
+			} insertError]} {
+				foreach line [mysqlsel $dbhandle "DESCRIBE $dbname;" -list] {
+					::set field [lindex $line 0]
+					::set keytype [string toupper [lindex $line 3]]
+					if {$keytype == "PRI" || $keytype == "UNI" || $keytype == "KEY"} {
+						::set fieldidx [lsearch -exact $fieldnames $field]
+						if {$fieldidx != -1} {
+							::set fieldvalue [lindex $fieldvalues $fieldidx]
+							lappend where "$field=$fieldvalue"
+						}
+					}
+				}
+				foreach fieldpair $fielddata {
+					::set fieldname [lindex $fieldpair 0]
+					::set fieldvalue [lindex $fieldpair 1]
+					lappend fieldassignlist "$fieldname=[sqlquote $fieldvalue]"
+				}
+				::set ret [mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"]
+	
+			}
 		}
 
 		if {!$ret} {
@@ -160,9 +204,9 @@ namespace eval db {
 
 	# Name: ::db::unset
 	# Args: (dash method)
-	#	-dbname		Name of database to modify
-	#	-where		Conditions to decide where to unset
-	#	?-fields?	Field to unset
+	#	-dbname name	Name of database to modify
+	#	-where cond	Conditions to decide where to unset
+	#	?-fields list?	Field to unset
 	# Rets: 1 on success, 0 otherwise.
 	# Stat: Complete.
 	proc unset args {
@@ -205,19 +249,19 @@ namespace eval db {
 
 	# Name: ::db::get
 	# Args: (dash method)
-	#	-dbname		Name of database to retrieve from.
-	#	-field		Field to return.
+	#	-dbname name	Name of database to retrieve from.
+	#	-field list	Field to return.
 	#	-all		Boolean conditional to return all or just one.
-	#	?-where?	Conditions to decide where to read.
+	#	?-where cond?	Conditions to decide where to read.
 	# Rets: The value of the variable
-	# Stat: Complete.
+	# Stat: In progress
 	proc get args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
-		::set fieldidx [expr [lsearch -exact $args "-field"] + 1]
+		::set fieldsidx [expr [lsearch -exact $args "-fields"] + 1]
 		::set whereidx [expr [lsearch -exact $args "-where"] + 1]
 		::set allbool [expr !!([lsearch -exact $args "-all"] + 1)]
-		if {$dbnameidx == 0 || $fieldidx == 0} {
-			return -code error "error: You must specify -dbname and -field."
+		if {$dbnameidx == 0 || $fieldsidx == 0} {
+			return -code error "error: You must specify -dbname and -fields."
 		}
 
 		if {$whereidx != 0} {
@@ -229,13 +273,13 @@ namespace eval db {
 		}
 
 		::set dbname [lindex $args $dbnameidx]
-		::set field [lindex $args $fieldidx]
+		::set fields [lindex $args $fieldsidx]
 
 		::set dbhandle [connect]
 		if {[info exists where]} {
-			::set ret [mysqlsel $dbhandle "SELECT $field FROM $dbname WHERE $wherevar=[sqlquote $whereval];" -flatlist]
+			::set ret [mysqlsel $dbhandle "SELECT [join $fields {, }] FROM $dbname WHERE $wherevar=[sqlquote $whereval];" -list]
 		} else {
-			::set ret [mysqlsel $dbhandle "SELECT $field FROM $dbname;" -flatlist]
+			::set ret [mysqlsel $dbhandle "SELECT [join $fields {, }] FROM $dbname;" -list]
 		}
 
 		if {$allbool} {
