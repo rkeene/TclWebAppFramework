@@ -1,0 +1,109 @@
+#LyX 1.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 221
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single 
+\papersize letterpaper
+\paperpackage a4
+\use_geometry 0
+\use_amsmath 0
+\use_natbib 0
+\use_numerical_citations 0
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip medskip
+\quotes_language english
+\quotes_times 2
+\papercolumns 1
+\papersides 2
+\paperpagestyle fancy
+
+\layout Title
+
+SchoolWeb Application Framework:
+\newline 
+User's Guide
+\layout Date
+
+05 January 2005
+\layout Author
+
+
+\begin_inset Graphics
+	filename /home/rkeene/work/ke/ke-logo-big.png
+	lyxscale 12
+	scale 12
+	keepAspectRatio
+
+\end_inset 
+
+
+\layout Address
+
+
+\noun on 
+Keene Enterprises
+\noun default 
+
+\newline 
+105E Arbor Gate Circle
+\newline 
+Picayune, MS
+\newline 
+39466-6001
+\layout Standard
+
+
+\begin_inset LatexCommand \tableofcontents{}
+
+\end_inset 
+
+
+\layout Chapter
+
+Introduction
+\layout Section
+
+Scope of This Document
+\layout Chapter
+
+Overview
+\layout Chapter
+
+Something
+\layout Chapter
+\start_of_appendix 
+License
+\layout Standard
+
+Copyright (c) 2004, 2005 
+\noun on 
+Keene Enterprises
+\layout Standard
+
+Permission is hereby granted, free of charge, to any person obtaining a
+ copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sub-license,
+ and/or sell copies of the Software, and to permit persons to whom the Software
+ is furnished to do so, subject to the following conditions:
+\layout Itemize
+
+The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+\layout Standard
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE
+, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ OTHER DEALINGS IN THE SOFTWARE.
+\the_end

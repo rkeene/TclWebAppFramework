@@ -1,3 +1,5 @@
+doc/*.pdf
+doc/*.pdf/*
 favicon.ico
 favicon.ico/*
 handler.rvt
