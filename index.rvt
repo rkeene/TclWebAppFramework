@@ -1,0 +1,81 @@
+<?
+	unset -nocomplain args
+	unset -nocomplain module
+
+	load_response args
+	load_headers
+	load_env
+
+	source modules/init.tcl
+	catch { source modules/cleanup.tcl }
+
+	set tryload ""
+
+	init_modules
+
+	if {![info exists module]} {
+		set module "main"
+	}
+
+	# Secondary initialization routines:
+	foreach cmd [lsort -dictionary [array names begin]] {
+		$begin($cmd)
+	}
+
+	debug "CURRENT MODULE = $module"
+
+	# Header data
+	foreach cmd [lsort -dictionary [array names header]] {
+		$header($cmd)
+	}
+
+	# Module data results
+	set mod_executed 0
+	foreach cmd [lsort -dictionary [array names data]] {
+		if {[string match "${module}_*" $cmd]} {
+			debug "Executing: $data($cmd)   (for $cmd)"
+			namespace eval ::request "$data($cmd)"
+			set mod_executed 1
+		}
+	}
+
+	# If nothing was specified, try to load a TTML page
+	if {!$mod_executed || $tryload!=""} {
+		if {[info exists args(action)]} {
+			if {[info exists args(user)]} {
+				lappend tryload modules/$module/pages/user/$args(action).ttml
+			}
+			lappend tryload modules/$module/pages/$args(action).ttml
+		}
+		if {[info exists args(user)]} {
+			lappend tryload modules/$module/pages/user/main.ttml modules/$module/pages/user/${module}.ttml
+		}
+		lappend tryload modules/$module/pages/main.ttml modules/$module/pages/${module}.ttml
+		foreach page $tryload {
+			debug "Attempting: local/$page"
+			if {[file exists local/$page]} {
+				debug "Executing: parse local/$page"
+				parse local/$page
+				break
+			}
+			debug "Attempting: $page"
+			if {[file exists $page]} {
+				debug "Executing: parse $page"
+				parse $page
+				break
+			}
+		}
+	}
+
+	# Footer data
+	foreach cmd [lsort -dictionary [array names footer]] {
+		$footer($cmd)
+	}
+
+	# Secondary de-initialization
+	foreach cmd [lsort -dictionary [array names end]] {
+		$end($cmd)
+	}
+
+	de_init_modules
+?>

@@ -1,0 +1,16 @@
+<form action="." method="post">
+<?
+   if {[info exists req_module]} {
+     set extras [list module $req_module]
+   }
+   puts [generate_vars form $extras] ?>
+  <table>
+    <tr><td>Username:</td><td><input type="text" name="user" value="<?
+	if {[info exists args(user)]} {
+		puts -nonewline $args(user)
+	}
+?>"></td></tr>
+    <tr><td>Password:</td><td><input type="password" name="pass" value=""></td></tr>
+  </table>
+  <input type="submit" name="submit" value="Login">
+</form>
