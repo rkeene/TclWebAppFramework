@@ -13,7 +13,7 @@ namespace eval login {
 		}
 		set auth 0
 		if {[info exists ::session::vars(uid)]} {
-			if {$::session::vars(uid) != $::login::anonymousuid} {
+			if {$::session::vars(uid) != $::login::anonymousuid && $::session::vars(uid) != 0} {
 				set auth 1
 			}
 		}

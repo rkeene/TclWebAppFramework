@@ -227,7 +227,7 @@ namespace eval admin {
 		return "modify-sel.rvt"
 	}
 
-	proc info args {
+	proc information args {
 		if {$args == "done"} {
 			return [main]
 		}

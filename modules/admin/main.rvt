@@ -12,7 +12,7 @@
     <td><a href="<? puts -nonewline [web::makeurl / 1 [list action modify]] ?>">Modify users.</a></td>
   </tr>
   <tr>
-    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action info]] ?>"><? puts -nonewline [web::icon admin-info ""] ?></a></td>
-    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action info]] ?>">User information.</a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action information]] ?>"><? puts -nonewline [web::icon admin-info ""] ?></a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action information]] ?>">User information.</a></td>
   </tr>
 </table>

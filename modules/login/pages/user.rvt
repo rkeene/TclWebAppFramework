@@ -11,7 +11,7 @@ Hello
 		set flg [lindex $modinfo 1]
 		set icon [lindex $modinfo 2]
 		set desc [lindex $modinfo 3]
-		if {$flg == ""} {
+		if {$icon == ""} {
 			continue
 		}
 		puts "<tr><td><a href=\"[web::makeurl / 1 [list module $mod]]\">[web::icon $icon {}]</a></td><td><a href=\"[web::makeurl / 1 [list module $mod]]\">$desc</a></td></tr>"
