@@ -1,81 +1,89 @@
 <?
+if {[catch {
 	unset -nocomplain args
 	unset -nocomplain module
 
 	load_response args
 	load_headers
-	load_env
 
-	source modules/init.tcl
-	catch { source modules/cleanup.tcl }
-
-	set tryload ""
-
-	init_modules
-
-	if {![info exists module]} {
-		set module "main"
+	if {![info exists ::auto_path_set]} {
+		set ::auto_path_set 1
+		lappend auto_path local/packages packages
 	}
 
-	# Secondary initialization routines:
-	foreach cmd [lsort -dictionary [array names begin]] {
-		$begin($cmd)
-	}
+	package require module
+	package require debug
 
-	debug "CURRENT MODULE = $module"
-
-	# Header data
-	foreach cmd [lsort -dictionary [array names header]] {
-		$header($cmd)
-	}
-
-	# Module data results
-	set mod_executed 0
-	foreach cmd [lsort -dictionary [array names data]] {
-		if {[string match "${module}_*" $cmd]} {
-			debug "Executing: $data($cmd)   (for $cmd)"
-			namespace eval ::request "$data($cmd)"
-			set mod_executed 1
+	if {![info exists ::done_onlyonce]} {
+		foreach file [glob -nocomplain modules/load/onlyonce/*.tcl modules/autoload/onlyonce/*.tcl local/modules/load/onlyonce/*.tcl local/modules/autoload/onlyonce/*.tcl] {
+			debug::log index.rvt "source $file"
+			namespace eval :: "source $file"
 		}
+		set ::done_onlyonce 1
 	}
 
-	# If nothing was specified, try to load a TTML page
-	if {!$mod_executed || $tryload!=""} {
-		if {[info exists args(action)]} {
-			if {[info exists session(user)]} {
-				lappend tryload modules/$module/pages/user/$args(action).ttml
+	if {[info exists args(module)]} {
+		set module $args(module)
+	} else {
+		set module main
+	}
+
+	set state INIT
+	foreach file [glob -nocomplain modules/load/*.tcl modules/autoload/*.tcl local/modules/load/*.tcl local/modules/autoload/*.tcl] {
+		source $file
+	}
+	# Do the header and footer init stuff only once.
+	if {![info exists ::finimods]} {
+		set ::finimods ""
+		foreach initmod [lsort -dictionary $::initmods] {
+			if {[string match "*:*" $initmod]} {
+				set initmod [join [lrange [split $initmod :] 1 end] :]
 			}
-			lappend tryload modules/$module/pages/$args(action).ttml
-		}
-		if {[info exists session(user)]} {
-			lappend tryload modules/$module/pages/user/main.ttml modules/$module/pages/user/${module}.ttml
-		}
-		lappend tryload modules/$module/pages/main.ttml modules/$module/pages/${module}.ttml
-		foreach page $tryload {
-			debug "Attempting: local/$page"
-			if {[file exists local/$page]} {
-				debug "Executing: parse local/$page"
-				parse local/$page
-				break
+			set modpage [module::call $::session::vars(uid) $initmod start]
+			if {$modpage == ""} {
+				continue
 			}
-			debug "Attempting: $page"
-			if {[file exists $page]} {
-				debug "Executing: parse $page"
-				parse $page
-				break
+			lappend ::headers $initmod $modpage
+			set ::finimods [linsert $::finimods 0 $initmod]
+		}
+		foreach finimod $::finimods {
+			set modpage [module::call $::session::vars(uid) $finimod stop]
+			if {$modpage == ""} {
+				continue
 			}
+			lappend ::footers $finimod $modpage
 		}
 	}
 
-	# Footer data
-	foreach cmd [lsort -dictionary [array names footer]] {
-		$footer($cmd)
+	if {[info exists args(action)]} {
+		set newpage [module::call $::session::vars(uid) $module $args(action)]
+	} else {
+		set newpage [module::call $::session::vars(uid) $module]
 	}
 
-	# Secondary de-initialization
-	foreach cmd [lsort -dictionary [array names end]] {
-		$end($cmd)
+	foreach {headmod header} $::headers {
+		debug::log index.rvt "Displaying $header/$headmod"
+		display $header $headmod
+	}
+	display $newpage $module
+	foreach {footmod footer} $::footers {
+		debug::log index.rvt "Displaying $footer/$footmod"
+		display $footer $footmod
 	}
 
-	de_init_modules
+	set state TERM
+	foreach file [glob -nocomplain modules/unload/*.tcl local/modules/unload/*.tcl modules/autoload/*.tcl local/modules/autoload/*.tcl] {
+		source $file
+	}
+} errInfo]} {
+	puts "<HTML>"
+	puts "  <HEAD><TITLE>ERROR</TITLE></HEAD>"
+	puts "  <BODY>"
+	puts "    <PRE>"
+	puts "ERROR:"
+	puts "$errorInfo"
+	puts "    </PRE>"
+	puts "  </BODY>"
+	puts "</HTML>"
+}
 ?>

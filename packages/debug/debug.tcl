@@ -5,7 +5,7 @@ namespace eval debug {
 		catch {
 			set logfd [open "/var/tmp/webapp-debug.log" a+]
 			set usec [lindex [split [expr [format "%u" [clock clicks]].0 / 1000000.0] .] 1]
-			puts $logfd "[clock seconds].$usec: \[$src\] $msg"
+			puts $logfd "[clock seconds].$usec \[[pid]\]: \[$src\] => $msg"
 			close $logfd
 		}
 	}

@@ -1,0 +1,17 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+<?
+	if {[info exists ::html::pageinfo(title)]} {
+		puts "    <title>[join $::html::pageinfo(title) ::]</title>"
+	}
+
+	if {[info exists ::html::css]} {
+		puts {    <style type="text/css">}
+		foreach cssent [lsort -dictionary [array names ::html::css]] {
+			puts "      $cssent {$::html::css($cssent)}"
+		}
+		puts {    </style>}
+	}
+?>  </head>
+  <body>

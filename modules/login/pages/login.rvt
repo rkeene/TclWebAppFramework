@@ -2,8 +2,10 @@
 <?
    if {[info exists req_module]} {
      set extras [list module $req_module]
+   } else {
+     set extras ""
    }
-   puts [generate_vars form $extras] ?>
+   puts [web::generate_vars form $extras] ?>
   <table>
     <tr><td>Username:</td><td><input type="text" name="user" value="<?
 	if {[info exists args(user)]} {

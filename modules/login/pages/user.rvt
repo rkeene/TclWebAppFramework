@@ -1,0 +1,18 @@
+Welcome authenticated user!<Br>
+Hello
+<?
+	puts "$::session::vars(uid)"
+?><br>
+These are your modules:<br>
+<?
+	foreach modinfo [module::list $::session::vars(uid)] {
+		set mod [lindex $modinfo 0]
+		set flg [lindex $modinfo 1]
+		set icon [lindex $modinfo 2]
+		set desc [lindex $modinfo 3]
+		if {$flg == ""} {
+			continue
+		}
+		puts "<a href=\"[web::makeurl / 1 [list module $mod]]\"><img style=\"icon\" src=\"/static/images/icons/$icon\"> $desc</a><br>"
+	}
+?>

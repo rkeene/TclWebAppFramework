@@ -1,30 +1,19 @@
 package require mysqltcl
 package require hook
 package require debug
+package require uuid
 
-package provide db 0.1
-
+package provide db 0.2
 
 namespace eval db {
-	# Name: ::db::genuuid
-	# Args: 
-	#       *prefix            Optional prefix
-	# Rets: A Universally Unique ID on success, 0 on failure
-	# Stat: Complete.
-	proc genuuid {{prefix 0}} {
-		::set uuid [format "%x-%x-%x-%x" $prefix [clock clicks] [clock seconds] [clock clicks] [pid]]
-		return $uuid
-	}
-
 	# Proc: ::db::sqlquote
 	# Args: 
 	#	str		String to be quoted
 	# Rets: An SQL-safe-for-assignment string.
 	# Stat: Complete
 	proc sqlquote {str} {
-		global CACHEDBHandle
-		if {[info exists CACHEDBHandle]} {
-			::set ret "'[mysqlescape $CACHEDBHandle $str]'"
+		if {[info exists ::db::CACHEDBHandle]} {
+			::set ret "'[mysqlescape $::db::CACHEDBHandle $str]'"
 		} else {
 			::set ret "'[mysqlescape $str]'"
 		}
@@ -37,19 +26,17 @@ namespace eval db {
 	# Rets: 1 on success, 0 otherwise.
 	# Stat: Complete.
 	proc disconnect {} {
-		global CACHEDBHandle
-
 		# Disconnected already.
-		if {![info exists CACHEDBHandle]} {
+		if {![info exists ::db::CACHEDBHandle]} {
 			return 1
 		}
 
 		hook::call db::disconnect::enter
 
 		catch {
-			mysqlclose $CACHEDBHandle
+			mysqlclose $::db::CACHEDBHandle
 		}
-		::unset CACHEDBHandle
+		::unset ::db::CACHEDBHandle
 
 		debug::log db "Disconnecting from MySQL database."
 
@@ -61,11 +48,21 @@ namespace eval db {
 	# Name: ::db::connect
 	# Args: (none)
 	# Rets: Returns a handle that must be used to talk to the SQL database.
-	# Stat: Complete.
+	# Stat: Complete
 	proc connect {} {
-		global CACHEDBHandle
-		if {[info exists CACHEDBHandle]} {
-			return $CACHEDBHandle
+		if {[info exists ::db::CACHEDBHandle]} {
+			switch -- [mysqlstate $::db::CACHEDBHandle] {
+				"NOT_A_HANDLE" {
+					::unset ::db::CACHEDBHandle
+				}
+				"UNCONNECTED" {
+					::unset ::db::CACHEDBHandle
+				}
+			}
+
+			if {[info exists ::db::CACHEDBHandle]} {
+				return $::db::CACHEDBHandle
+			}
 		}
 
 		hook::call db::connect::enter
@@ -73,10 +70,10 @@ namespace eval db {
 		debug::log db "Connecting to MySQL database."
 
 		catch {
-			::set CACHEDBHandle [mysqlconnect -host $::config::db(server) -user $::config::db(user)  -password $::config::db(pass) -db $::config::db(dbname)]
+			::set ::db::CACHEDBHandle [mysqlconnect -host $::config::db(server) -user $::config::db(user)  -password $::config::db(pass) -db $::config::db(dbname)]
 		} connectError
 
-		if {![info exists CACHEDBHandle]} {
+		if {![info exists ::db::CACHEDBHandle]} {
 			return -code error "error: Could not connect to SQL Server: $connectError"
 		}
 
@@ -84,9 +81,9 @@ namespace eval db {
 			disconnect
 		}
 
-		hook::call db::connect::return $CACHEDBHandle
+		hook::call db::connect::return $::db::CACHEDBHandle
 
-		return $CACHEDBHandle
+		return $::db::CACHEDBHandle
 	}
 
 	# Name: ::db::create
@@ -153,7 +150,7 @@ namespace eval db {
 	#	-field name value Field to modify
 	#	?-where	cond?	Conditions to decide where to modify
 	# Rets: 1 on success, 0 otherwise.
-	# Stat: In progress
+	# Stat: Complete
 	proc set args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
 		::set fieldidx [expr [lsearch -exact $args "-field"] + 1]
@@ -311,7 +308,7 @@ namespace eval db {
 	#	-all		Boolean conditional to return all or just one.
 	#	?-where cond?	Conditions to decide where to read.
 	# Rets: The value of the variable
-	# Stat: In progress
+	# Stat: Complete
 	proc get args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
 		::set fieldsidx [expr [lsearch -exact $args "-fields"] + 1]
@@ -376,4 +373,39 @@ namespace eval db {
 		return $ret
 	}
 
+	# Name: ::db::fields
+	# Args: (dash method)
+	#	-dbname db	Database to list fields from
+	# Rets: A list of fields in `db'
+	# Stat: Complete
+	proc fields args {
+		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
+		if {$dbnameidx == 0} {
+			return -code error "error: You must specify -dbname"
+		}
+
+		::set dbname [lindex $args $dbnameidx]
+
+		::set ret ""
+
+		::set dbhandle [connect]
+
+		debug::log db "DESCRIBE $dbname;"
+
+		foreach line [mysqlsel $dbhandle "DESCRIBE $dbname;" -list] {
+			::set field [lindex $line 0]
+			::set keytype [string toupper [lindex $line 3]]
+			if {$keytype == "PRI" || $keytype == "UNI" || $keytype == "KEY"} {
+				if {[info exists ::db::keys($dbname)]} {
+					if {[lsearch -exact $::db::keys($dbname) $field] != -1} {
+						continue
+					}
+				}
+				lappend ::db::keys($dbname) $field
+			}
+			lappend ret $field
+		}
+
+		return $ret
+	}
 }

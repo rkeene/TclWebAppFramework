@@ -1,0 +1,1 @@
+<a href="<? puts -nonewline [web::makeurl / 1 [list module admin action new]] ?>"><img style="icon" src="/static/images/icons/admin-new.png"> Create a new user.</a><br>

@@ -1,8 +1,11 @@
 package require db
 package require hook
 package require crypt
+package require uuid
 
 package provide user 0.1
+
+uuid::register 11 user
 
 namespace eval user {
 	set badflag(limit) 1
@@ -46,11 +49,22 @@ namespace eval user {
 	# Name: ::user::login
 	# Args:
 	#	uid		UID of user to login.
+	#	pass		Password to verify
+	#	from		IP address of user
 	# Rets: 1 if the login was successful, 0 otherwise
 	# Stat: In progress.
-	proc login {uid} {
-		# ...
+	proc login {uid pass from} {
 		if {![exists $uid]} {
+			debug::log user::login "User doesn't exist ($uid)"
+			return 0
+		}
+
+		set realpass [get -uid $uid -pass]
+		set realsalt [string range $realpass 0 1]
+		set chkpass [crypt $pass $realsalt]
+
+		if {$chkpass != $realpass} {
+			debug::log user::login "Failed password ($chkpass != $realpass)"
 			return 0
 		}
 
@@ -107,7 +121,7 @@ namespace eval user {
 			return 0
 		}
 
-		set uid [db::genuuid 11]
+		set uid [uuid::gen user]
 
 		set success [db::set -dbname user -field uid $uid -field user $user -field name $name -field flags $flags -field opts $opts -field pass $pass]
 
@@ -312,7 +326,11 @@ namespace eval user {
 	# Rets: 1 on success, 0 otherwise
 	# Stat: Complete
 	proc hasflag {uid chkflags} {
-		set flags [string tolower [get -uid $uid -flags]]
+		if {[uuid::type $uid] == "user"} {
+			set flags [string tolower [get -uid $uid -flags]]
+		} else {
+			set flags $uid
+		}
 
 		hook::call user::hasflag::enter $uid $chkflags
 
