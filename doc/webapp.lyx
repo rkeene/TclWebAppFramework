@@ -543,7 +543,41 @@ Notes
 \begin_deeper 
 \layout Enumerate
 
-(none)
+The 
+\family typewriter 
+db::set
+\family default 
+ function sets the specified field in the specified database to the specified
+ value.
+ If there 
+\begin_inset Quotes eld
+\end_inset 
+
+where
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is supplied then the specified field's value is changed to the
+ specified value in every occurance matching the specified expression.
+ If there are no fields matching success is still indicated.
+ If the 
+\begin_inset Quotes eld
+\end_inset 
+
+where
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is omited a new entry is created (or an existing entry is updated
+ if creating a new entry would violate the 
+\begin_inset Quotes eld
+\end_inset 
+
+unique
+\begin_inset Quotes erd
+\end_inset 
+
+-ness quality of the specified field.)
 \end_deeper 
 \layout Subsubsection
 
