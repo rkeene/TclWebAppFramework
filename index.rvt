@@ -42,12 +42,12 @@
 	# If nothing was specified, try to load a TTML page
 	if {!$mod_executed || $tryload!=""} {
 		if {[info exists args(action)]} {
-			if {[info exists args(user)]} {
+			if {[info exists session(user)]} {
 				lappend tryload modules/$module/pages/user/$args(action).ttml
 			}
 			lappend tryload modules/$module/pages/$args(action).ttml
 		}
-		if {[info exists args(user)]} {
+		if {[info exists session(user)]} {
 			lappend tryload modules/$module/pages/user/main.ttml modules/$module/pages/user/${module}.ttml
 		}
 		lappend tryload modules/$module/pages/main.ttml modules/$module/pages/${module}.ttml

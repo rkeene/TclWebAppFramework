@@ -2,8 +2,8 @@ proc init_modules {} {
 	global cmdlist module
 	upvar #0 init init
 
-	set addtoautopath ./packages
-	if {[lsearch $::auto_path "$addtoautopath"]==-1} {
+	set addtoautopath [list packages]
+	if {[lsearch $::auto_path "$addtoautopath"] == -1} {
 		lappend ::auto_path $addtoautopath
 	}
 

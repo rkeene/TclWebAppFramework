@@ -69,7 +69,7 @@ proc convtoext {str} {
 	set ret ""
 	for {set i 0} {$i<[string length $str]} {incr i} {
 		set char [string index $str $i]
-		if {[string match {[A-Za-z0-9.-]} $char]} {
+		if {[regexp {^[A-Za-z0-9.-]$} $char]} {
 			append ret $char
 		} else {
 			set ascii [scan $char "%c"]
