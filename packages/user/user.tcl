@@ -113,6 +113,10 @@ namespace eval user {
 
 		set user [lindex $args $useridx]
 
+		if {$user == ""} {
+			return 0
+		}
+
 		hook::call user::create::enter $user $name $flags $opts $pass
 
 		# Verify that the user does not already exist
@@ -239,23 +243,33 @@ namespace eval user {
 	#	and the UID is specified as "ALL"
 	#	A list of strings is returned if one item is requested and the
 	#	UID is specified as "ALL"
-	# Stat: Complete
+	# Stat: In progress
 	proc get args {
-		set fieldsidx [expr [lsearch -exact $args "-fields"] + 1]
-		set uididx [expr [lsearch -exact $args "-uid"] + 1]
-		set flagsidx [lsearch -exact $args "-flags"]
-		set useridx [lsearch -exact $args "-user"]
-		set nameidx [lsearch -exact $args "-name"]
-		set optsidx [lsearch -exact $args "-opts"]
-		set uidsidx [lsearch -exact $args "-uids"]
-		set passidx [lsearch -exact $args "-pass"]
-
-		if {$uididx == 0} {
+		for {set idx 0} {$idx < [llength $args]} {incr idx} {
+			set curr [lindex $args $idx]
+			switch -- $curr {
+				"-uid" {
+					incr idx
+					set uid [lindex $args $idx]
+				}
+				"-fields" {
+					incr idx
+					set specfields [lindex $args $idx]
+				}
+				"-flags" { lappend fields "flags" }
+				"-user" { lappend fields "user" }
+				"-name" { lappend fields "name" }
+				"-pass" { lappend fields "pass" }
+				"-opts" { lappend fields "opts" }
+				"-uids" { lappend fields "uid" }
+			}
+		}
+		if {![info exists uid]} {
 			return -code error "error: You must specify atleast -uid."
 		}
 
-		if {$fieldsidx != 0} {
-			foreach field [lindex $args $fieldsidx] {
+		if {[info exists specfields]} {
+			foreach field $specfields {
 				switch -- [string tolower $field] {
 					"flags" { lappend fields "flags" }
 					"user" { lappend fields "user" }
@@ -265,24 +279,6 @@ namespace eval user {
 					"uid" { lappend fields "uid" }
 				}
 			}
-		}
-		if {$useridx != -1} {
-			lappend fields "user"
-		}
-		if {$nameidx != -1} {
-			lappend fields "name"
-		}
-		if {$optsidx != -1} {
-			lappend fields "opts"
-		}
-		if {$flagsidx != -1} {
-			lappend fields "flags"
-		}
-		if {$uidsidx != -1} {
-			lappend fields "uid"
-		}
-		if {$passidx != -1} {
-			lappend fields "pass"
 		}
 		foreach fieldidx [lsearch -all -exact $args "-field"] {
 			set field [lindex $args [expr $fieldidx + 1]]
@@ -296,15 +292,13 @@ namespace eval user {
 			}
 		}
 
-		set uid [lindex $args $uididx]
-
 		if {$uid == "ALL"} {
 			set wherecmd "-all"
 		} else {
 			set wherecmd "-where"
 		}
 
-		if {[llength $fields] == 1 && $fieldsidx == 0} {
+		if {[llength $fields] == 1 && ![info exists specfields]} {
 			set fieldscmd "-field"
 		} else {
 			set fieldscmd "-fields"
@@ -439,7 +433,62 @@ namespace eval user {
 	# Stat: In progress
 	proc setopt {uid opt value} {
 		set opts [get -uid $uid -opts]
-		
+
+		set optidx [lsearch -glob $opts [list $opt *]]
+
+		if {$optidx == -1} {
+			if {$value != ""} {
+				lappend opts [list $opt $value]
+			}
+		} else {
+			if {$value != ""} {
+				set opts [lreplace $opts $optidx $optidx [list $opt $value]]
+			} else {
+				set optidxlo [expr $optidx - 1]
+				set optidxpo [expr $optidx + 1]
+				set opts [join [list [lrange $opts 0 $optidxlo] [lrange $opts $optidxpo end]]]
+			}
+		}
+
+		set ret [change -uid $uid -opts $opts]
+
+		return $ret
+	}
+
+	# Name: ::user::listopt
+	# Args:
+	#	opt		Option to check for
+	#	?value?		Value for option to equal
+	#	?case?		Case sensitive comparison?
+	# Rets: A list of UIDs who have `opt' (or `opt' set to `value')
+	# Stat: In progress
+	proc listopt {opt {value ""} {case 0}} {
+		set ret ""
+		if {!$case} {
+			set value [string tolower $value]
+		}
+		foreach useropt [get -uid ALL -fields [list uid opts]] {
+			set uid [lindex $useropt 0]
+			set opts [lindex $useropt 1]
+			set optidx [lsearch -glob $opts [list $opt *]]
+			if {$optidx == -1} {
+				continue
+			}
+
+			if {$value != ""} {
+				set chkvalue [lindex [lindex $opts $optidx] 1]
+				if {!$case} {
+					set chkvalue [string tolower $chkvalue]
+				}
+				if {$value != $chkvalue} {
+					continue
+				}
+			}
+
+			lappend ret $uid
+		}
+
+		return $ret
 	}
 
 	# Name: ::user::getopt
@@ -449,6 +498,17 @@ namespace eval user {
 	# Rets: String value of `opt', empty string if not found
 	# Stat: In progress
 	proc getopt {uid opt} {
+		set opts [get -uid $uid -opts]
+
+		set ret ""
+
+		set optidx [lsearch -glob $opts [list $opt *]]
+
+		if {$optidx != -1} {
+			set ret [lindex [lindex $opts $optidx] 1]
+		}
+
+		return $ret
 	}
 
 	# Name: ::user::exists

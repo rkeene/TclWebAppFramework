@@ -1,0 +1,67 @@
+<form action="." method="post">
+<?
+	puts [web::generate_vars form]
+
+	if {[info exists ::request::args(set_sort)]} {
+		set sortidx $::request::args(set_sort)
+	} else {
+		set sortidx 0
+	}
+?>
+  <table>
+    <tr>
+      <td>Sort:</td>
+      <td>
+         <select size="1" name="set_sort">
+           <option value="0"<?
+	if {$sortidx == 0} { puts -nonewline " selected" }
+?>>Unsorted</option>
+           <option value="1"<?
+	if {$sortidx == 1} { puts -nonewline " selected" }
+?>>User Name</option>
+           <option value="2"<?
+	if {$sortidx == 2} { puts -nonewline " selected" }
+?>>Full Name</option>
+         </select>
+         <input type="submit" name="subaction" value="Change">
+      </td>
+    </tr>
+    <tr>
+      <td>Users:</td>
+      <td>
+        <select name="modusers" size="5" multiple>
+<?
+	foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
+		set mod_uid [lindex $userinfo 0]
+		set mod_user [lindex $userinfo 1]
+		set mod_name [lindex $userinfo 2]
+		if {[info exists ::request::args(modusers)]} {
+			if {[lsearch -exact $::request::args(modusers) $mod_uid] != -1} {
+				set selected " selected"
+			} else {
+				set selected ""
+			}
+		} else {
+			set selected ""
+		}
+		puts "<option value=\"$mod_uid\"${selected}>$mod_user ($mod_name)</option>"
+	}
+?>
+        </select>
+      </td>
+    </tr>
+<!--
+    <tr>
+      <td colspan="2" align="center">-- OR --</td>
+    </tr>
+    <tr>
+       <td colspan="2">Select qualifiers:</td>
+    </tr>
+    <tr>
+      <td>
+    </tr>
+-->
+  </table>
+  <input type="submit" name="subaction" value="Next">
+  <input type="submit" name="subaction" value="Cancel">
+</form>

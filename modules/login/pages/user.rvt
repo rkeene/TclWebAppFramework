@@ -3,9 +3,10 @@ Hello
 <?
 	puts "$::session::vars(uid)"
 ?><br>
-These are your modules:<br>
+
+<table>
 <?
-	foreach modinfo [module::list $::session::vars(uid)] {
+	foreach modinfo [lsort -dictionary [module::list $::session::vars(uid)]] {
 		set mod [lindex $modinfo 0]
 		set flg [lindex $modinfo 1]
 		set icon [lindex $modinfo 2]
@@ -13,6 +14,7 @@ These are your modules:<br>
 		if {$flg == ""} {
 			continue
 		}
-		puts "<a href=\"[web::makeurl / 1 [list module $mod]]\"><img style=\"icon\" src=\"/static/images/icons/$icon\"> $desc</a><br>"
+		puts "<tr><td><a href=\"[web::makeurl / 1 [list module $mod]]\">[web::icon $icon {}]</a></td><td><a href=\"[web::makeurl / 1 [list module $mod]]\">$desc</a></td></tr>"
 	}
 ?>
+</table>

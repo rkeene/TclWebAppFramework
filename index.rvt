@@ -3,24 +3,24 @@ if {[catch {
 	unset -nocomplain args
 	unset -nocomplain module
 
-	load_response args
-	load_headers
-
 	if {![info exists ::auto_path_set]} {
 		set ::auto_path_set 1
 		lappend auto_path local/packages packages
+		package require module
+		package require debug
+		package require web
 	}
 
-	package require module
-	package require debug
-
 	if {![info exists ::done_onlyonce]} {
-		foreach file [glob -nocomplain modules/load/onlyonce/*.tcl modules/autoload/onlyonce/*.tcl local/modules/load/onlyonce/*.tcl local/modules/autoload/onlyonce/*.tcl] {
+		foreach file [glob -nocomplain modules/*/load/*.tcl modules/load/onlyonce/*.tcl modules/autoload/onlyonce/*.tcl local/modules/*/load/*.tcl local/modules/load/onlyonce/*.tcl local/modules/autoload/onlyonce/*.tcl] {
 			debug::log index.rvt "source $file"
 			namespace eval :: "source $file"
 		}
 		set ::done_onlyonce 1
 	}
+
+	load_response args
+	load_headers
 
 	if {[info exists args(module)]} {
 		set module $args(module)
@@ -55,10 +55,34 @@ if {[catch {
 		}
 	}
 
+	set subaction ""
+	foreach var [array names args] {
+		if {[string match "*.y" $var]} {
+			continue
+		}
+		if {[string match "*.x" $var]} {
+			set basevar [string range $var 0 end-2]
+			if {![info exists ::request::args($basevar.y)]} {
+				continue
+			}
+			set ::request::args($basevar) [list $::request::args($basevar.x) $::request::args($basevar.y)]
+			unset ::request::args($basevar.x) ::request::args($basevar.y)
+			set var "$basevar"
+		}
+		if {[string match "subaction_*" $var]} {
+			set subaction [string tolower [join [lrange [split $var _] 1 end] _]]
+			break
+		}
+		if {[string tolower $var] == "subaction"} {
+			set subaction [join [split [string tolower $args($var)]] _]
+			break
+		}
+	}
+
 	if {[info exists args(action)]} {
-		set newpage [module::call $::session::vars(uid) $module $args(action)]
+		set newpage [module::call $::session::vars(uid) $module $args(action) $subaction]
 	} else {
-		set newpage [module::call $::session::vars(uid) $module]
+		set newpage [module::call $::session::vars(uid) $module "" $subaction]
 	}
 
 	foreach {headmod header} $::headers {

@@ -109,13 +109,20 @@ namespace eval module {
 	proc list {{uid ""}} {
 		set ret ""
 
+		if {$uid == "-all"} {
+			set allbool 1
+		} else {
+			set allbool 0
+		}
+
 		foreach {module modinfo} [array get ::module::modinfo] {
 			set chkflags [lindex $modinfo 0]
 			set icon [lindex $modinfo 1]
 			set desc [lindex $modinfo 2]
-			if {[user::hasflag $uid $chkflags]} {
-				lappend ret [::list $module $chkflags $icon $desc]
+			if {!$allbool && ![user::hasflag $uid $chkflags]} {
+				continue
 			}
+			lappend ret [::list $module $chkflags $icon $desc]
 		}
 
 		return $ret

@@ -1,1 +1,14 @@
-<a href="<? puts -nonewline [web::makeurl / 1 [list module admin action new]] ?>"><img style="icon" src="/static/images/icons/admin-new.png"> Create a new user.</a><br>
+<table>
+  <tr>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action new]] ?>"><? puts -nonewline [web::icon admin-new ""] ?></a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action new]] ?>">Create a new user.</a></td>
+  </tr>
+  <tr>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action delete]] ?>"><? puts -nonewline [web::icon admin-del ""] ?></a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action delete]] ?>">Delete a user.</a></td>
+  </tr>
+  <tr>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action delete]] ?>"><? puts -nonewline [web::icon admin-mod ""] ?></a></td>
+    <td><a href="<? puts -nonewline [web::makeurl / 1 [list action modify]] ?>">Modify users.</a></td>
+  </tr>
+</table>

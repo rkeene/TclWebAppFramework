@@ -1,0 +1,118 @@
+<form action="." method="post">
+<?  puts [web::generate_vars form] ?>
+<?
+	if {[info exists ::request::adminerror]} {
+		puts "<div class=\"module_error\">error: $::request::adminerror</div>"
+	}
+?>
+<table>
+  <tr>
+    <td>Username:</td>
+    <td><input type="text" name="set_username"<?
+if {[info exists ::request::args(set_username)]} {
+	puts -nonewline " value=\"$::request::args(set_username)\""
+}
+?>></td>
+  </tr>
+  <tr>
+    <td>Full Name:</td>
+    <td><input type="text" name="set_fullname"<?
+if {[info exists ::request::args(set_fullname)]} {
+	puts -nonewline " value=\"$::request::args(set_fullname)\""
+}
+?>></td>
+  </tr>
+  <tr>
+    <td>Password:</td>
+    <td><input type="password" name="set_password"<?
+if {[info exists ::request::args(set_password)]} {
+	puts -nonewline " value=\"$::request::args(set_password)\""
+}
+?>></td>
+  </tr>
+  <tr>
+    <td>Flags:</td>
+    <td>
+<?
+	# Generate a list of flags from all the modules
+	# that are registered and all the users flags as well.
+	set flags ""
+	foreach modinfo [module::list -all] {
+		set modflags [lindex $modinfo 1]
+		foreach modflag $modflags {
+			if {[lsearch -exact $flags $modflag] == -1} {
+				lappend flags $modflag
+			}
+		}
+	}
+	foreach userflags [user::get -uid ALL -flags] {
+		foreach userflag $userflags {
+			if {[lsearch -exact $flags $userflag] == -1 && [lsearch -exact $flags "$userflag:u"] == -1} {
+				lappend flags "$userflag:u"
+			}
+		}
+	}
+	foreach flag [lsort -dictionary $flags] {
+		set flaginfo [lindex [split $flag :] 1]
+		set flag [lindex [split $flag :] 0]
+		set extra ""
+		switch -- $flaginfo {
+			"u" {
+				set extra " (unassociated)"
+			}
+		}
+		if {[info exists ::request::args(set_flag_${flag})]} {
+			puts "<input type=\"checkbox\" name=\"set_flag_${flag}\" checked value=\"set\"> $flag$extra<br>"
+		} else {
+			puts "<input type=\"checkbox\" name=\"set_flag_${flag}\" value=\"set\"> $flag$extra<br>"
+		}
+	}
+?>
+    </td>
+  </tr>
+  <tr>
+    <td>Options:</td>
+    <td>
+      <table>
+<?
+	set numopts $::request::args(numopts)
+	for {set cnt 0} {$cnt < $numopts} {incr cnt} {
+?>
+        <tr>
+          <td>
+<?
+	if {[info exists ::request::args(set_opt_${cnt}_name)]} {
+		set value "$::request::args(set_opt_${cnt}_name)"
+	} else {
+		set value ""
+	}
+	puts "            <input type=\"text\" name=\"set_opt_${cnt}_name\" value=\"$value\">"
+
+?>
+          </td>
+          <td>=</td>
+          <td>
+<?
+	if {[info exists ::request::args(set_opt_${cnt}_val)]} {
+		set value "$::request::args(set_opt_${cnt}_val)"
+	} else {
+		set value ""
+	}
+	puts "            <input type=\"text\" name=\"set_opt_${cnt}_val\" value=\"$value\">"
+?>
+          </td>
+        </tr>
+<?
+	}
+?>
+      </table>
+      <input type="image" name="subaction_incrcnt" src="/static/images/icons/plus.png">
+      <input type="image" name="subaction_deccnt" src="/static/images/icons/minus.png">
+    </td>
+  </tr>
+</table>
+
+<input type="submit" name="subaction" value="Create">
+<input type="submit" name="subaction" value="Cancel">
+
+</form>

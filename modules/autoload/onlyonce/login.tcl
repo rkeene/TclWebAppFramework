@@ -2,13 +2,15 @@ package require web
 package require user
 
 namespace eval login {
-	set anonymousuid [user::getuid anonymous]
 
 	proc init {} {
 		return 1
 	}
 
 	proc main args {
+		if {![info exists ::login::anonymousuid]} {
+			set ::login::anonymousuid [user::getuid anonymous]
+		}
 		set auth 0
 		if {[info exists ::session::vars(uid)]} {
 			if {$::session::vars(uid) != $::login::anonymousuid} {

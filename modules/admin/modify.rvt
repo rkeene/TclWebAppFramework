@@ -1,0 +1,202 @@
+<form action="." method="get">
+<?
+	set usercount [llength $::request::args(modusers)]
+	if {$usercount == 1} {
+		set changechecked " checked"
+		set uid [lindex $::request::args(modusers) 0]
+		set ::request::args(set_username) [user::get -uid $uid -user]
+		set ::request::args(set_fullname) [user::get -uid $uid -name]
+		foreach flag [user::get -uid $uid -flags] {
+			set ::request::args(set_flag_$flag) 1
+		}
+		set cnt 0
+		foreach optinfo [user::get -uid $uid -opts] {
+			set ::request::args(set_opt_${cnt}_name) [lindex $optinfo 0]
+			set ::request::args(set_opt_${cnt}_val) [lindex $optinfo 1]
+			incr cnt
+		}
+		if {$cnt < 2} { set cnt 2 }
+		if {[info exists ::request::args(numopts)]} {
+			if {$::request::args(numopts) < $cnt} {
+				set ::request::args(numopts) $cnt
+			}
+		} else {
+			set ::request::args(numopts) $cnt
+		}
+	} else {
+		set changechecked ""
+	}
+?>
+<?  puts [web::generate_vars form] ?>
+<table>
+  <tr>
+<?
+	if {$usercount == 1} {
+?>
+    <td><input type="checkbox" name="set_update_username"<? puts -nonewline $changechecked ?>></td>
+    <td>Username:</td>
+    <td><input type="text" name="set_username"<?
+if {[info exists ::request::args(set_username)]} {
+	puts -nonewline " value=\"$::request::args(set_username)\""
+}
+?>></td>
+<?
+	} else {
+?>
+    <td></td>
+    <td>Exclude:</td>
+    <td>
+      <select name="do_exclude" size="3" multiple>
+<?
+	foreach uid $::request::args(modusers) {
+		set username [user::getnam $uid]
+		set fullname [user::get -uid $uid -name]
+		set extra ""
+		if {[info exists ::request::args(do_exclude)]} {
+			if {[lsearch -exact $::request::args(do_exclude) $uid] != -1} {
+				set extra " selected"
+			}
+		}
+		puts "<option value=\"$uid\"${extra}>$username ($fullname)</option>"
+	}
+?>
+      </select>
+    </td>
+<?
+	}
+?>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="set_update_fullname"<? puts -nonewline $changechecked ?>></td>
+    <td>Full Name:</td>
+    <td><input type="text" name="set_fullname"<?
+if {[info exists ::request::args(set_fullname)]} {
+	puts -nonewline " value=\"$::request::args(set_fullname)\""
+}
+?>></td>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="set_update_password"></td>
+    <td>Password:</td>
+    <td><input type="password" name="set_password"<?
+if {[info exists ::request::args(set_password)]} {
+	puts -nonewline " value=\"$::request::args(set_password)\""
+}
+?>></td>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="set_update_flags"<? puts -nonewline $changechecked ?>></td>
+    <td>Flags:</td>
+    <td>
+      <table>
+<?
+	# Generate a list of flags from all the modules
+	# that are registered and all the users flags as well.
+	set flags ""
+	foreach modinfo [module::list -all] {
+		set modflags [lindex $modinfo 1]
+		foreach modflag $modflags {
+			if {[lsearch -exact $flags $modflag] == -1} {
+				lappend flags $modflag
+			}
+		}
+	}
+	foreach userflags [user::get -uid ALL -flags] {
+		foreach userflag $userflags {
+			if {[lsearch -exact $flags $userflag] == -1 && [lsearch -exact $flags "$userflag:u"] == -1} {
+				lappend flags "$userflag:u"
+			}
+		}
+	}
+	foreach flag [lsort -dictionary $flags] {
+		set flaginfo [lindex [split $flag :] 1]
+		set flag [lindex [split $flag :] 0]
+		set extra ""
+		switch -- $flaginfo {
+			"u" {
+				set extra " (unassociated)"
+			}
+		}
+		if {$usercount == 1} {
+			puts "<tr>"
+			set checked ""
+			if {[info exists ::request::args(set_flag_${flag})]} {
+				set checked " checked"
+			}
+			puts "<td><input type=\"checkbox\" name=\"set_flag_${flag}\" value=\"set\"${checked}> $flag$extra</td>"
+			puts "</tr>"
+		} else {
+			puts "<tr>"
+			puts "<td>$flag$extra</td>"
+			set notchecked " checked"
+			set setchecked ""
+			set unsetchecked ""
+			if {[info exists ::request::args(set_flag_${flag})]} {
+				switch -- $::request::args(set_flag_${flag}) {
+					"set" {
+						set notchecked ""
+						set setchecked " checked"
+					}
+					"unset" {
+						set notchecked ""
+						set unsetchecked " checked"
+					}
+				}
+			}
+			puts "<td><input type=\"radio\" name=\"set_flag_${flag}\" value=\"set\"${setchecked}> Set</td>"
+			puts "<td><input type=\"radio\" name=\"set_flag_${flag}\" value=\"unset\"${unsetchecked}> Unset</td>"
+			puts "<td><input type=\"radio\" name=\"set_flag_${flag}\" value=\"nothing\"${notchecked}> No change</td>"
+			puts "</tr>"
+		}
+	}
+?>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td><input type="checkbox" name="set_update_opts"<? puts -nonewline $changechecked ?>></td>
+    <td>Options:</td>
+    <td>
+      <table>
+<?
+	set numopts $::request::args(numopts)
+	for {set cnt 0} {$cnt < $numopts} {incr cnt} {
+?>
+        <tr>
+          <td>
+<?
+	if {[info exists ::request::args(set_opt_${cnt}_name)]} {
+		set value "$::request::args(set_opt_${cnt}_name)"
+	} else {
+		set value ""
+	}
+	puts "            <input type=\"text\" name=\"set_opt_${cnt}_name\" value=\"$value\">"
+
+?>
+          </td>
+          <td>=</td>
+          <td>
+<?
+	if {[info exists ::request::args(set_opt_${cnt}_val)]} {
+		set value "$::request::args(set_opt_${cnt}_val)"
+	} else {
+		set value ""
+	}
+	puts "            <input type=\"text\" name=\"set_opt_${cnt}_val\" value=\"$value\">"
+?>
+          </td>
+        </tr>
+<?
+	}
+?>
+      </table>
+      <input type="image" name="subaction_incrcnt" src="/static/images/icons/plus.png">
+      <input type="image" name="subaction_deccnt" src="/static/images/icons/minus.png">
+    </td>
+  </tr>
+</table>
+
+<input type="submit" name="subaction" value="Modify">
+<input type="submit" name="subaction" value="Cancel">
+
+</form>

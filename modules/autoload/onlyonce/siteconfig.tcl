@@ -19,6 +19,7 @@ if {[module::register siteconfig "" "" "Site graphical configuration"]} {
 namespace eval ::html {
 	set css(a) { text-decoration: none; color: #FF0000; }
 	set css(.icon) { border: 0; }
+	set css(.module_error) { text-alignment: center; color: #FF0000; }
 }
 
 namespace eval ::config {

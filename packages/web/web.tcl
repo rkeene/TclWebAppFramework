@@ -33,6 +33,9 @@ namespace eval web {
 		}
 		if {!$noargs} {
 			foreach var [array names ::request::args] {
+				if {$var == "submit" || [string match "set_*" $var] || [string match "do_*" $var] || [string match "subaction*" $var]} {
+					continue
+				}
 				set val $::request::args($var)
 				if {![info exists used($var)]} {
 					lappend varval $var $val
@@ -74,5 +77,26 @@ namespace eval web {
 		if {[string index $dest 0]=="/"} { set dest [string range $dest 1 end] }
 		if {[string index $root end]=="/"} { set root [string range $root 0 end-1] }
 		return "$root/$dest"
+	}
+
+	proc icon {icon alt {class "icon"}} {
+		global root
+
+		if {![info exists root]} {
+			set root ""
+		}
+	
+		foreach chkfile [list local/static/images/icons/$icon local/static/images/icons/$icon.png static/images/icons/$icon static/images/icons/$icon.png] {
+			if {[file exists $chkfile]} {
+				set iconfile $chkfile
+				break
+			}
+		}
+
+		if {![info exists iconfile]} {
+			set iconfile "static/images/icons/unknown.png"
+		}
+
+		return "<img src=\"$root/$iconfile\" alt=\"$alt\" class=\"$class\">"
 	}
 }

@@ -1,0 +1,56 @@
+<form action="." method="post">
+<?
+	puts [web::generate_vars form]
+
+	if {[info exists ::request::args(set_sort)]} {
+		set sortidx $::request::args(set_sort)
+	} else {
+		set sortidx 0
+	}
+?>
+  <table>
+    <tr>
+      <td>Sort:</td>
+      <td>
+         <select size="1" name="set_sort">
+           <option value="0"<?
+	if {$sortidx == 0} { puts -nonewline " selected" }
+?>>Unsorted</option>
+           <option value="1"<?
+	if {$sortidx == 1} { puts -nonewline " selected" }
+?>>User Name</option>
+           <option value="2"<?
+	if {$sortidx == 2} { puts -nonewline " selected" }
+?>>Full Name</option>
+         </select>
+         <input type="submit" name="subaction" value="Change">
+      </td>
+    </tr>
+    <tr>
+      <td>Users:</td>
+      <td>
+        <select name="do_delusers" size="5" multiple>
+<?
+	foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
+		set del_uid [lindex $userinfo 0]
+		set del_user [lindex $userinfo 1]
+		set del_name [lindex $userinfo 2]
+		if {[info exists ::request::args(do_delusers)]} {
+			if {[lsearch -exact $::request::args(do_delusers) $del_uid] != -1} {
+				set selected " selected"
+			} else {
+				set selected ""
+			}
+		} else {
+			set selected ""
+		}
+		puts "<option value=\"$del_uid\"${selected}>$del_user ($del_name)</option>"
+	}
+?>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <input type="submit" name="subaction" value="Delete">
+  <input type="submit" name="subaction" value="Cancel">
+</form>

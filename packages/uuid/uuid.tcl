@@ -32,14 +32,20 @@ namespace eval uuid {
 	# Name: ::uuid::type
 	# Args:
 	#	uuid		UUID to return the type of
-	# Rets: A type based on the UUID prefix
+	# Rets: A type based on the UUID prefix, "unknown" on error
 	# Stat: Complete
 	proc type {uuid} {
 		set ret ""
-		set prefix [expr 0x[lindex [split $uuid -] 0]]
-		foreach {type prefixes} [array get ::uuid::types] {
-			if {[lsearch $prefixes $prefix] != -1} {
-				lappend ret $type
+
+		catch {
+			set prefix [expr 0x[lindex [split $uuid -] 0]]
+		}
+
+		if {[info exists prefix]} {
+			foreach {type prefixes} [array get ::uuid::types] {
+				if {[lsearch $prefixes $prefix] != -1} {
+					lappend ret $type
+				}
 			}
 		}
 
