@@ -1,0 +1,494 @@
+#LyX 1.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 221
+\textclass book
+\language english
+\inputencoding auto
+\fontscheme default
+\graphics default
+\paperfontsize default
+\spacing single 
+\papersize letterpaper
+\paperpackage a4
+\use_geometry 0
+\use_amsmath 0
+\use_natbib 0
+\use_numerical_citations 0
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\quotes_times 2
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+
+\layout Title
+
+SchoolWeb Application Framework: Developers Manual
+\layout Author
+
+Keene Enterprises
+\layout Date
+
+01 January 2005
+\layout Standard
+
+
+\begin_inset LatexCommand \tableofcontents{}
+
+\end_inset 
+
+
+\layout Chapter
+
+Introduction
+\layout Standard
+
+Welcome to the SchoolWeb Application Framework Developers Manual.
+\layout Section
+
+Scope of This Document
+\layout Standard
+
+This document is intended for software developers or advanced system administrat
+ors who wish to modify or enhance the functionality of the SchoolWeb Application
+ Framework.
+\layout Standard
+
+System administrators interested in configuration details should consult
+ the SchoolWeb Application Framework User's Guide.
+\layout Section
+
+System Requirements
+\layout Standard
+
+The SchoolWeb Application Framework uses 
+\begin_inset Quotes eld
+\end_inset 
+
+mod_rivet
+\begin_inset Quotes erd
+\end_inset 
+
+ and the Apache Software Foundation's 
+\begin_inset Quotes eld
+\end_inset 
+
+httpd
+\begin_inset Quotes erd
+\end_inset 
+
+ webserver.
+\layout Subsection
+
+mod_rivet
+\layout Standard
+
+mod_rivet version 0.4.1 or greater is required.
+\layout Subsection
+
+Apache
+\layout Standard
+
+Apache 1.3.29 or greater is required.
+\layout Chapter
+
+Flow of Control
+\layout Section
+
+Initialization
+\layout Section
+
+Persistent versus Non-persistent
+\layout Chapter
+
+Modules
+\layout Section
+
+User Administration
+\layout Section
+
+Notes
+\layout Section
+
+Workorder Viewer
+\layout Section
+
+Workorder Placement
+\layout Section
+
+Lesson Plans
+\layout Section
+
+Calendar
+\layout Section
+
+Homepages
+\layout Section
+
+School Pages
+\layout Chapter
+
+Packages
+\layout Section
+
+Database
+\layout Subsubsection
+
+db::create
+\layout Paragraph
+
+Syntax
+\layout Standard
+
+db::create -dbname <dbname> -fields <fields_list>
+\layout Paragraph
+
+Arguments
+\layout Itemize
+
+-dbname <dbname>
+\layout Itemize
+
+-fields <field_list>
+\layout Paragraph
+
+Return Value
+\layout Standard
+
+This function returns 1 on success, 0 otherwise.
+ An error may be returned if the database backend could not be opened.
+\layout Paragraph
+
+Notes
+\layout Standard
+
+(none)
+\layout Subsubsection
+
+db::set
+\layout Paragraph
+
+Syntax
+\layout Standard
+
+db::set -dbname <dbname> -field <fieldname> <fieldvalue> ?-where <expression>?
+\layout Paragraph
+
+Arguments
+\layout Itemize
+
+-dbname <dbname>
+\layout Itemize
+
+-field <fieldname> <fieldvalue>
+\layout Itemize
+
+-where <expression>
+\layout Paragraph
+
+Return Value
+\layout Standard
+
+This function returns 1 on success, 0 otherwise.
+ An error may be returned if the database backend could not be initialized.
+\layout Paragraph
+
+Notes
+\layout Standard
+
+(none)
+\layout Subsubsection
+
+db::unset
+\layout Paragraph
+
+Syntax
+\layout Standard
+
+db::unset -dbname <dbname> -where <expression> ?-fields <field_list>?
+\layout Paragraph
+
+Arguments
+\layout Itemize
+
+-dbname <dbname>
+\layout Itemize
+
+-where <expression>
+\layout Itemize
+
+-fields <field_list>
+\layout Paragraph
+
+Return Value
+\layout Standard
+
+This function returns 1 on success, 0 otherwise.
+ An error may be returned if the database backend could not be initalized.
+\layout Paragraph
+
+Notes
+\layout Standard
+
+(none)
+\layout Subsubsection
+
+db::get
+\layout Paragraph
+
+Syntax
+\layout Standard
+
+db::get -dbname <dbname> ?-fields <field_list>? ?-where <expression>? ?-field
+ <field>?
+\layout Paragraph
+
+Arguments
+\layout Itemize
+
+-dbname <dbname>
+\layout Itemize
+
+-fields <field_list>
+\layout Itemize
+
+-where <expression>
+\layout Itemize
+
+-field <field>
+\layout Paragraph
+
+Return Value
+\layout Standard
+
+This function returns a list or single value depending on the parameters
+ passed.
+\layout Standard
+
+If the 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is not passed and only one 
+\begin_inset Quotes eld
+\end_inset 
+
+-field
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is passed then this funtion returns a single value (unless the
+ 
+\begin_inset Quotes eld
+\end_inset 
+
+-where
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is not passed).
+\layout Standard
+
+If the 
+\begin_inset Quotes eld
+\end_inset 
+
+-fields
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is passed or more than one 
+\begin_inset Quotes eld
+\end_inset 
+
+-field
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is passed then this function returns a list of the values for
+ the specified fields (unless the 
+\begin_inset Quotes eld
+\end_inset 
+
+-where
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is not passed, then a list of lists is returned).
+\layout Standard
+
+If the 
+\begin_inset Quotes eld
+\end_inset 
+
+-where
+\begin_inset Quotes erd
+\end_inset 
+
+ parameter is not passed, a list of whatever would normally be returned
+ is returned each outer element refers to a single row in the database.
+\layout Paragraph
+
+Notes
+\layout Standard
+
+(none)
+\layout Subsubsection
+
+db::fields
+\layout Paragraph
+
+Syntax
+\layout Standard
+
+db::fields -dbname <dbname>
+\layout Paragraph
+
+Arguments
+\layout Itemize
+
+-dbname <dbname>
+\layout Paragraph
+
+Return Value
+\layout Standard
+
+This function returns a list of fields that a given database was created
+ with.
+\layout Paragraph
+
+Notes
+\layout Standard
+
+(none)
+\layout Subsection
+
+User
+\layout Subsubsection
+
+user::exists
+\layout Subsubsection
+
+user::getuid
+\layout Subsubsection
+
+user::getnam
+\layout Subsubsection
+
+user::login
+\layout Subsubsection
+
+user::create
+\layout Subsubsection
+
+user::delete
+\layout Subsubsection
+
+user::change
+\layout Subsubsection
+
+user::get
+\layout Subsubsection
+
+user::setflag
+\layout Subsubsection
+
+user::hasflag
+\layout Subsubsection
+
+user::unsetflag
+\layout Subsubsection
+
+user::setopt
+\layout Subsubsection
+
+user::getopt
+\layout Subsubsection
+
+user::listopt
+\layout Subsubsection
+
+user::listflag
+\layout Subsubsection
+
+user::flaglist
+\layout Subsection
+
+Session
+\layout Subsubsection
+
+session::create
+\layout Subsubsection
+
+session::destroy
+\layout Subsubsection
+
+session::load
+\layout Subsubsection
+
+session::save
+\layout Subsection
+
+Module
+\layout Subsubsection
+
+module::register
+\layout Subsubsection
+
+module::list
+\layout Subsubsection
+
+module::info
+\layout Subsubsection
+
+module::unregister
+\layout Subsection
+
+UUID
+\layout Subsubsection
+
+uuid::gen
+\layout Subsubsection
+
+uuid::register
+\layout Subsubsection
+
+uuid::type
+\layout Subsection
+
+Notes
+\layout Standard
+
+(not yet implemented)
+\layout Subsection
+
+Workorders
+\layout Standard
+
+(not yet implemented)
+\layout Subsection
+
+Hooks
+\layout Subsubsection
+
+hook::register
+\layout Subsubsection
+
+hook::call
+\layout Subsubsection
+
+hook::unregister
+\layout Chapter
+\start_of_appendix 
+Terminology
+\layout Chapter
+
+License
+\the_end
