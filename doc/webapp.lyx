@@ -137,7 +137,15 @@ Apache version 1.3.29 or greater is required.
 mod_rivet
 \layout Standard
 
-mod_rivet version 0.4.1 or greater is required.
+The Apache module 
+\begin_inset Quotes eld
+\end_inset 
+
+mod_rivet
+\begin_inset Quotes erd
+\end_inset 
+
+ version 0.4.1 or greater is highly recommended.
 \layout Subsection
 
 Mysqtcl
@@ -372,6 +380,45 @@ Current Modules
 \layout Subsection
 
 User Administration
+\layout Standard
+
+The User Administration module provides the user-interface for managing
+ users within the system.
+ It includes event handlers for:
+\layout Itemize
+
+Creating new users
+\layout Itemize
+
+Deleting existing users
+\layout Itemize
+
+Modifying existing users parameters (subject to limitations)
+\layout Itemize
+
+Retrieving information about existing users
+\layout Itemize
+
+Switching users (requires the 
+\begin_inset Quotes eld
+\end_inset 
+
+root
+\begin_inset Quotes erd
+\end_inset 
+
+ flag)
+\layout Standard
+
+Execution of handlers in the User Administration module requires the 
+\begin_inset Quotes eld
+\end_inset 
+
+admin
+\begin_inset Quotes erd
+\end_inset 
+
+ flag.
 \layout Subsection
 
 Notes
