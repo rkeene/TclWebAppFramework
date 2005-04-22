@@ -21,10 +21,3 @@ namespace eval ::html {
 	set css(.icon) { border: 0; }
 	set css(.module_error) { text-alignment: center; color: #FF0000; }
 }
-
-namespace eval ::config {
-	set db(user) rkeene
-	set db(pass) joe
-	set db(server) localhost
-	set db(dbname) rkeene
-}
