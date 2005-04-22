@@ -23,9 +23,12 @@ package require user
 package require db
 package require module
 
-if ...
-source modules/autoload/onlyonce/siteconfig.tcl
-source local/modules/autoload/onlyonce/siteconfig.tcl
+if {[file exists modules/autoload/onlyonce/siteconfig.tcl]} {
+	source modules/autoload/onlyonce/siteconfig.tcl
+}
+if {[file exists local/modules/autoload/onlyonce/siteconfig.tcl]} {
+	source local/modules/autoload/onlyonce/siteconfig.tcl
+}
 
 if {[info exists config::db(unconfigured)]} {
 	puts -nonewline "DB Username: "
