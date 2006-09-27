@@ -12,6 +12,7 @@ if {[catch {
 		package require module
 		package require debug
 		package require web
+		package require user
 	}
 
 	if {![info exists ::done_onlyonce]} {
@@ -37,7 +38,7 @@ if {[catch {
 		source $file
 	}
 
-	# Go no further with a UID.
+	# Go no further without a UID.
 	if {[user::getuid] == 0} {
 		set module "login"
 	}
@@ -116,16 +117,24 @@ if {[catch {
 	foreach file [glob -nocomplain modules/unload/*.tcl local/modules/unload/*.tcl modules/autoload/*.tcl local/modules/autoload/*.tcl] {
 		source $file
 	}
-} errInfo]} {
-	puts "<HTML>"
-	puts "  <HEAD><TITLE>ERROR</TITLE></HEAD>"
-	puts "  <BODY>"
-	puts "    <PRE>"
-	puts "ERROR:"
-	puts "$errorInfo"
-	puts "    </PRE>"
-	puts "  </BODY>"
-	puts "</HTML>"
+} errmsg]} {
+	set savedtrace $errorInfo
+
+	# Throw the error again if there's an error handler
+	if {[namespace which -command rivet_error] != ""} {
+		error $errmsg $errorInfo
+	} else {
+		# Otherwise, handle it ourselves.
+		puts "<HTML>"
+		puts "  <HEAD><TITLE>ERROR</TITLE></HEAD>"
+		puts "  <BODY>"
+		puts "    <PRE>"
+		puts "ERROR:"
+		puts "$errmsg"
+		puts "    </PRE>"
+		puts "  </BODY>"
+		puts "</HTML>"
+	}
 }
 
 	namespace delete cache
