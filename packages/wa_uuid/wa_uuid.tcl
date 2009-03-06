@@ -16,8 +16,8 @@ namespace eval wa_uuid {
 	# Stat: Complete
 	proc gen {{prefix 0}} {
 		if {![string is integer -strict $prefix]} {
-			if {[info exists ::uuid::types($prefix)]} {
-				set prefix $::uuid::types($prefix)
+			if {[info exists ::wa_uuid::types($prefix)]} {
+				set prefix $::wa_uuid::types($prefix)
 			} else {
 				set prefix 0
 			}
@@ -42,7 +42,7 @@ namespace eval wa_uuid {
 		}
 
 		if {[info exists prefix]} {
-			foreach {type prefixes} [array get ::uuid::types] {
+			foreach {type prefixes} [array get ::wa_uuid::types] {
 				if {[lsearch $prefixes $prefix] != -1} {
 					lappend ret $type
 				}
@@ -74,10 +74,10 @@ namespace eval wa_uuid {
 			return 0
 		}
 
-		lappend ::uuid::types($type) $prefix
+		lappend ::wa_uuid::types($type) $prefix
 
 		if {$module != ""} {
-			lappend ::uuid::modules($prefix) $module
+			lappend ::wa_uuid::modules($prefix) $module
 		}
 
 		return 1
