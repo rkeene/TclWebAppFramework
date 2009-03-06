@@ -58,7 +58,6 @@ if {![info exists config::db(user)] || ![info exists config::db(pass)] || ![info
 	puts $fd "	[list set db(pass) $config::db(pass)]"
 	puts $fd "	[list set db(server) $config::db(server)]"
 	puts $fd "	[list set db(dbname) $config::db(dbname)]"
-	puts $fd "	[list unset db(unconfigured)]"
 	puts $fd "}"
 	close $fd
 }
