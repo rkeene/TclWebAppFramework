@@ -1,9 +1,9 @@
 package provide session 0.3
 
 package require db
-package require uuid
+package require wa_uuid
 
-uuid::register 110 session
+wa_uuid::register 110 session
 
 namespace eval session {
 	# Name: ::session::create
@@ -13,7 +13,7 @@ namespace eval session {
 	proc create {} {
 		unset -nocomplain ::session::vars ::session::id
 
-		set sessionid [uuid::gen session]
+		set sessionid [wa_uuid::gen session]
 
 		set ::session::id $sessionid
 

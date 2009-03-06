@@ -62,7 +62,7 @@ db::create -dbname sessions -fields [list sessionid data]
 db::create -dbname user -fields [list uid user name flags opts pass]
 db::create -dbname file -fields [list id name readperm writeperm]
 
-set manrootuid [uuid::gen user]
+set manrootuid [wa_uuid::gen user]
 db::set -dbname user -field uid $manrootuid -field user root -field flags [list root] -field pass "*LK*"
 user::setuid $manrootuid
 

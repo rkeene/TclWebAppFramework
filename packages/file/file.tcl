@@ -2,9 +2,9 @@ package provide file 0.1
 
 package require user
 package require db
-package require uuid
+package require wa_uuid
 
-uuid::register 30 file
+wa_uuid::register 30 file
 
 namespace eval file {
 	# Name: ::file::create
@@ -15,7 +15,7 @@ namespace eval file {
 	proc create {name} {
 		set ret 0
 		catch {
-			set id [uuid::gen file]
+			set id [wa_uuid::gen file]
 			set uid [user::getuid]
 
 			file mkdir local/static/files/$id/

@@ -1,4 +1,4 @@
-package provide uuid 0.3
+package provide wa_uuid 0.3
 
 if {[catch {
 	package require Tclx
@@ -6,7 +6,7 @@ if {[catch {
 	package require Tclx-compat
 }
 
-namespace eval uuid {
+namespace eval wa_uuid {
 	set types(unknown) 0
 
 	# Name: ::uuid::gen

@@ -8,4 +8,4 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded uuid 0.3 [list source [file join $dir uuid.tcl]]
+package ifneeded wa_uuid 0.3 [list source [file join $dir wa_uuid.tcl]]

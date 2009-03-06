@@ -3,11 +3,11 @@ package provide user 0.1
 package require db
 package require hook
 package require crypt
-package require uuid
+package require wa_uuid
 package require module
 package require session
 
-uuid::register 11 user
+wa_uuid::register 11 user
 
 namespace eval user {
 	set badflag(limit) 1
@@ -164,7 +164,7 @@ namespace eval user {
 
 		hook::call user::create::enter $user $name $flags $opts $pass
 
-		set uid [uuid::gen user]
+		set uid [wa_uuid::gen user]
 
 		set success [db::set -dbname user -field uid $uid -field user $user -field name $name -field flags $flags -field opts $opts -field pass $pass]
 
@@ -399,7 +399,7 @@ namespace eval user {
 			set uid [getuid]
 		}
 
-		if {[uuid::type $uid] == "user"} {
+		if {[wa_uuid::type $uid] == "user"} {
 			if {[info exists ::cache::user([list flags $uid])]} {
 				set flags $::cache::user([list flags $uid])
 			} else {
@@ -706,7 +706,7 @@ namespace eval user {
 			return 0
 		}
 
-		if {[uuid::type $newuid] != "user"} {
+		if {[wa_uuid::type $newuid] != "user"} {
 			return 0
 		}
 

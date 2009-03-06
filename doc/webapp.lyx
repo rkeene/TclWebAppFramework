@@ -2128,7 +2128,7 @@ Overview
 Functions
 \layout Subsubsection
 
-uuid::gen
+wa_uuid::gen
 \layout Enumerate
 
 Syntax
@@ -2137,7 +2137,7 @@ Syntax
 
 
 \family typewriter 
-uuid::gen ?<prefix>?
+wa_uuid::gen ?<prefix>?
 \end_deeper 
 \layout Enumerate
 
@@ -2181,7 +2181,7 @@ Notes
 \end_deeper 
 \layout Subsubsection
 
-uuid::register
+wa_uuid::register
 \layout Enumerate
 
 Syntax
@@ -2190,7 +2190,7 @@ Syntax
 
 
 \family typewriter 
-uuid::register <prefix> <type> ?<module>?
+wa_uuid::register <prefix> <type> ?<module>?
 \end_deeper 
 \layout Enumerate
 
@@ -2224,7 +2224,7 @@ Notes
 \end_deeper 
 \layout Subsubsection
 
-uuid::type
+wa_uuid::type
 \layout Enumerate
 
 Syntax
@@ -2233,7 +2233,7 @@ Syntax
 
 
 \family typewriter 
-uuid::type <uuid>
+wa_uuid::type <uuid>
 \end_deeper 
 \layout Enumerate
 
