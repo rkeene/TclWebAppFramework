@@ -97,7 +97,7 @@ namespace eval web {
 			set imgfile "static/images/$class/unknown.png"
 		}
 
-		if {$class != "icon"} {
+		if {$class != "icons"} {
 			set class "image-${class}"
 		}
 
@@ -105,7 +105,7 @@ namespace eval web {
 	}
 
 	proc icon {icon alt} {
-		return [image $icon $alt icon]
+		return [image $icon $alt icons]
 	}
 
 }
