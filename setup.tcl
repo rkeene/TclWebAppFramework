@@ -30,7 +30,7 @@ if {[file exists local/modules/autoload/onlyonce/siteconfig.tcl]} {
 	source local/modules/autoload/onlyonce/siteconfig.tcl
 }
 
-if {[info exists config::db(unconfigured)]} {
+if {![info exists config::db(user)] || ![info exists config::db(pass)] || ![info exists config::db(server)] || ![info exists config::db(dbname)]} {
 	puts -nonewline "DB Username: "
 	flush stdout
 	gets stdin config::db(user)
