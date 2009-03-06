@@ -79,14 +79,14 @@ namespace eval web {
 		return "$root/$dest"
 	}
 
-	proc icon {icon alt {class "icon"}} {
+	proc image {name alt class} {
 		global root
 
 		if {![info exists root]} {
 			set root ""
 		}
 	
-		foreach chkfile [list local/static/images/icons/$icon local/static/images/icons/$icon.png static/images/icons/$icon static/images/icons/$icon.png] {
+		foreach chkfile [list local/static/images/$class/$icon local/static/images/$class/$icon.png static/images/$class/$icon static/images/$class/$icon.png] {
 			if {[file exists $chkfile]} {
 				set iconfile $chkfile
 				break
@@ -94,9 +94,18 @@ namespace eval web {
 		}
 
 		if {![info exists iconfile]} {
-			set iconfile "static/images/icons/unknown.png"
+			set iconfile "static/images/$class/unknown.png"
+		}
+
+		if {$class != "icon"} {
+			set class "image-${class}"
 		}
 
 		return "<img src=\"$root/$iconfile\" alt=\"$alt\" class=\"$class\">"
 	}
+
+	proc icon {icon alt} {
+		return [image $icon $alt icon]
+	}
+
 }
