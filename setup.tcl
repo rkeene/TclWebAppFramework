@@ -1,5 +1,7 @@
 #! /usr/bin/tclsh
 
+cd [file dirname [info script]]
+
 lappend auto_path packages
 
 set rootuser ""
@@ -49,6 +51,7 @@ if {![info exists config::db(user)] || ![info exists config::db(pass)] || ![info
 	flush stdout
 	gets stdin config::db(dbname)
 
+	set mkdir "local/modules/autoload/onlyonce/"
 	set fd [open "local/modules/autoload/onlyonce/siteconfig.tcl" a+]
 	puts $fd "namespace eval ::config {"
 	puts $fd "	[list set db(user) $config::db(user)]"
