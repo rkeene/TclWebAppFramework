@@ -86,22 +86,22 @@ namespace eval web {
 			set root ""
 		}
 	
-		foreach chkfile [list local/static/images/$class/$icon local/static/images/$class/$icon.png static/images/$class/$icon static/images/$class/$icon.png] {
+		foreach chkfile [list local/static/images/$class/$name local/static/images/$class/$name.png static/images/$class/$name static/images/$class/$name.png] {
 			if {[file exists $chkfile]} {
-				set iconfile $chkfile
+				set imgfile $chkfile
 				break
 			}
 		}
 
-		if {![info exists iconfile]} {
-			set iconfile "static/images/$class/unknown.png"
+		if {![info exists imgfile]} {
+			set imgfile "static/images/$class/unknown.png"
 		}
 
 		if {$class != "icon"} {
 			set class "image-${class}"
 		}
 
-		return "<img src=\"$root/$iconfile\" alt=\"$alt\" class=\"$class\">"
+		return "<img src=\"$root/$imgfile\" alt=\"$alt\" class=\"$class\">"
 	}
 
 	proc icon {icon alt} {
