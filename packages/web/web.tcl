@@ -86,19 +86,19 @@ namespace eval web {
 			set root ""
 		}
 	
-		foreach chkfile [list local/static/images/$class/$name local/static/images/$class/$name.png static/images/$class/$name static/images/$class/$name.png] {
+		foreach chkfile [list local/static/images/$class/$name local/static/images/$class/$name.png static/images/$class/$name static/images/$class/$name.png local/static/images/$class/unknown.png static/images/$class/unknown.png] {
 			if {[file exists $chkfile]} {
 				set imgfile $chkfile
 				break
 			}
 		}
 
-		if {![info exists imgfile]} {
-			set imgfile "static/images/$class/unknown.png"
-		}
-
 		if {$class != "icons"} {
 			set class "image-${class}"
+		}
+
+		if {![info exists imgfile]} {
+			return "<div class=\"$class\">$alt</div>"
 		}
 
 		return "<img src=\"$root/$imgfile\" alt=\"$alt\" class=\"$class\">"
