@@ -1,9 +1,3 @@
-Welcome authenticated user!<Br>
-Hello
-<?
-	puts "[user::getuid]"
-?><br>
-
 <table>
 <?
 	foreach modinfo [lsort -dictionary [module::list [user::getuid]]] {
