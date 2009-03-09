@@ -14,7 +14,7 @@ Hello
 		if {$icon == ""} {
 			continue
 		}
-		puts "<tr><td><a href=\"[web::makeurl / 1 [list module $mod]]\">[web::icon $icon {}]</a></td><td><a href=\"[web::makeurl / 1 [list module $mod]]\">$desc</a></td></tr>"
+		puts "<tr><td><a href=\"[web::makeurl / 1 [list module $mod action main]]\">[web::icon $icon {}]</a></td><td><a href=\"[web::makeurl / 1 [list module $mod action main]]\">$desc</a></td></tr>"
 	}
 ?>
 </table>
