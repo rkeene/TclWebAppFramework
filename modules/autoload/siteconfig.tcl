@@ -1,1 +1,3 @@
-set ::html::pageinfo(title) [list "WebApp"]
+if {![info exists ::html::pageinfo(title)]} {
+	set ::html::pageinfo(title) [list "WebApp"]
+}
