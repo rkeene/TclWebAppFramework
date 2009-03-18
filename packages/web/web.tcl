@@ -1,6 +1,16 @@
 package provide web 0.1
 
 namespace eval web {
+	proc _set_root {} {
+		if {[info exists ::env(REQUEST_URI)]} {
+			set ::web::root [lindex [split $::env(REQUEST_URI) ?] 0]
+
+			return
+		}
+
+		set ::web::root ""
+	}
+
 	proc convtoext {str} {
 		set ret ""
 		for {set i 0} {$i<[string length $str]} {incr i} {
@@ -58,12 +68,10 @@ namespace eval web {
 	}
 
 	proc makeurl {dest {includevars 0} {vars ""}} {
-		global root
-
-		if {![info exists root]} {
-			set root ""
+		if {![info exists ::web::root]} {
+			::web::_set_root
 		}
-	
+
 		if {[string match {*\?*} $dest]} {
 			set joinchar "&"
 		} else {
@@ -75,17 +83,19 @@ namespace eval web {
 		}
 
 		if {[string index $dest 0]=="/"} { set dest [string range $dest 1 end] }
-		if {[string index $root end]=="/"} { set root [string range $root 0 end-1] }
+
+		set root $::web::root
+		if {[string index $root end]=="/"} {
+			set root [string range $root 0 end-1]
+		}
 		return "$root/$dest"
 	}
 
 	proc image {name alt class} {
-		global root
-
-		if {![info exists root]} {
-			set root ""
+		if {![info exists ::web::root]} {
+			::web::_set_root
 		}
-	
+
 		foreach chkfile [list local/static/images/$class/$name local/static/images/$class/$name.png static/images/$class/$name static/images/$class/$name.png local/static/images/$class/unknown.png static/images/$class/unknown.png] {
 			if {[file exists $chkfile]} {
 				set imgfile $chkfile
@@ -101,11 +111,22 @@ namespace eval web {
 			return "<div class=\"$class\">$alt</div>"
 		}
 
-		return "<img src=\"$root/$imgfile\" alt=\"$alt\" class=\"$class\">"
+		set root $::web::root
+		if {[string index $root end]=="/"} {
+			set root [string range $root 0 end-1]
+		}
+		set imgurl "$root/$imgfile"
+		return "<img src=\"$imgurl\" alt=\"$alt\" class=\"$class\">"
 	}
 
 	proc icon {icon alt} {
 		return [image $icon $alt icons]
 	}
 
+	proc getarg {argname {default ""}} {
+		if {[info exists ::request::args($argname)]} {
+			return ::request::args($argname)
+		}
+		return $default
+	}
 }
