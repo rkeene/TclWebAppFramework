@@ -2,13 +2,23 @@ package provide web 0.1
 
 namespace eval web {
 	proc _set_root {} {
-		if {[info exists ::env(REQUEST_URI)]} {
-			set ::web::root [lindex [split $::env(REQUEST_URI) ?] 0]
+		if {[info exists ::web::root]} {
+			return
+		}
+
+		if {[info exists ::env(SCRIPT_NAME)]} {
+			set ::web::root $::env(SCRIPT_NAME)
+			# If we are a not starkit/starpack, exclude the name of the script
+			if {![info exists ::starkit::topdir]} {
+				set ::web::root [file dirname $::web::root]
+			}
 
 			return
 		}
 
-		set ::web::root ""
+		if {![info exists ::web::root]} {
+			set ::web::root ""
+		}
 	}
 
 	proc convtoext {str} {
@@ -68,9 +78,7 @@ namespace eval web {
 	}
 
 	proc makeurl {dest {includevars 0} {vars ""}} {
-		if {![info exists ::web::root]} {
-			::web::_set_root
-		}
+		::web::_set_root
 
 		if {[string match {*\?*} $dest]} {
 			set joinchar "&"
@@ -92,9 +100,7 @@ namespace eval web {
 	}
 
 	proc image {name alt class} {
-		if {![info exists ::web::root]} {
-			::web::_set_root
-		}
+		::web::_set_root
 
 		foreach chkfile [list local/static/images/$class/$name local/static/images/$class/$name.png static/images/$class/$name static/images/$class/$name.png local/static/images/$class/unknown.png static/images/$class/unknown.png] {
 			if {[file exists $chkfile]} {
