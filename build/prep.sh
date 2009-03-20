@@ -23,4 +23,7 @@ EOF
 # Delete the "update.sh", it's only for people using SVN versions.
 rm -f update.sh
 
+# Delete any directories named "work", they hold working documents
+find . -type d -name work -print0 | xargs -0 rm -rf
+
 exit 0
