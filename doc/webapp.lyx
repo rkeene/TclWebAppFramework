@@ -30,7 +30,7 @@
 
 \layout Title
 
-SchoolWeb Application Framework:
+Tcl Web Application Framework:
 \newline 
 Developer's Manual
 \layout Date
@@ -74,25 +74,25 @@ Picayune, MS
 Introduction
 \layout Standard
 
-Welcome to the SchoolWeb Application Framework Developer's Manual.
+Welcome to the Tcl Web Application Framework Developer's Manual.
 \layout Section
 
 Scope of This Document
 \layout Standard
 
 This document is intended for software developers or advanced system administrat
-ors who wish to modify or enhance the functionality of the SchoolWeb Application
+ors who wish to modify or enhance the functionality of the Tcl Web Application
  Framework.
 \layout Standard
 
 System administrators interested in configuration details should consult
- the SchoolWeb Application Framework User's Guide.
+ the Tcl Web Application Framework User's Guide.
 \layout Section
 
 System Requirements
 \layout Standard
 
-The SchoolWeb Application Framework uses 
+The Tcl Web Application Framework uses 
 \begin_inset Quotes eld
 \end_inset 
 
@@ -173,7 +173,7 @@ Modules do most of the output generation.
 Persistent versus Non-persistent
 \layout Standard
 
-The SchoolWeb Application Framework is written as a Rivet (mod_rivet) applicatio
+The Tcl Web Application Framework is written as a Rivet (mod_rivet) applicatio
 n so portions of the code may remain loaded after a request has finished
  processing.
  The portions of code that remain loaded are referred to as persistent.
@@ -267,7 +267,7 @@ request
 Modules
 \layout Standard
 
-Modules are a key component in the SchoolWeb Application Framework.
+Modules are a key component in the Tcl Web Application Framework.
  They serve as an the event handlers and as the primary front-end control
  mechanism.
 \layout Standard
@@ -372,7 +372,7 @@ A module should never insert data into the output stream, but rather return
 \begin_inset Quotes erd
 \end_inset 
 
- it indicates that the filename is relative to the SchoolWeb Application
+ it indicates that the filename is relative to the Tcl Web Application
  Framework's top-level directory (or site-local directory).
 \layout Section
 
@@ -2664,7 +2664,6 @@ email:
 support@keene-enterprises.com
 \layout Enumerate
 
-phone: (228) 547-8915
 \layout Subsection
 
 License Information
