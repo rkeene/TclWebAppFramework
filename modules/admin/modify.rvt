@@ -172,8 +172,8 @@ if {[info exists ::request::args(set_password)]} {
 	}
 ?>
       </table>
-      <input type="image" name="subaction_incrcnt" src="/static/images/icons/plus.png">
-      <input type="image" name="subaction_deccnt" src="/static/images/icons/minus.png">
+      <input type="image" name="subaction_incrcnt" src="<? puts -nonewline [web::image plus "" icons 1] ?>">
+      <input type="image" name="subaction_deccnt" src="<? puts -nonewline [web::image minus "" icons 1] ?>">
     </td>
   </tr>
 </table>

@@ -1,4 +1,4 @@
-package provide web 0.1
+package provide web 0.2
 
 namespace eval web {
 	proc _set_root {} {
@@ -99,7 +99,7 @@ namespace eval web {
 		return "$root/$dest"
 	}
 
-	proc image {name alt class} {
+	proc image {name alt class {filenameonly 0}} {
 		::web::_set_root
 
 		foreach chkfile [list local/static/images/$class/$name local/static/images/$class/$name.png static/images/$class/$name static/images/$class/$name.png local/static/images/$class/unknown.png static/images/$class/unknown.png] {
@@ -114,7 +114,11 @@ namespace eval web {
 		}
 
 		if {![info exists imgfile]} {
-			return "<div class=\"$class\">$alt</div>"
+			if {$filenameonly} {
+				return ""
+			} else {
+				return "<div class=\"$class\">$alt</div>"
+			}
 		}
 
 		set root $::web::root
@@ -122,7 +126,11 @@ namespace eval web {
 			set root [string range $root 0 end-1]
 		}
 		set imgurl "$root/$imgfile"
-		return "<img src=\"$imgurl\" alt=\"$alt\" class=\"$class\">"
+		if {$filenameonly} {
+			return $imgurl
+		} else {
+			return "<img src=\"$imgurl\" alt=\"$alt\" class=\"$class\">"
+		}
 	}
 
 	proc icon {icon alt} {
