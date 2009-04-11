@@ -139,7 +139,7 @@ namespace eval web {
 
 	proc getarg {argname {default ""}} {
 		if {[info exists ::request::args($argname)]} {
-			return ::request::args($argname)
+			return $::request::args($argname)
 		}
 		return $default
 	}
