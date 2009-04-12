@@ -11,7 +11,10 @@ namespace eval db {
 	# Rets: 1 on success, 0 otherwise.
 	# Stat: In progress..
 	proc disconnect {} {
-		mk::file close db
+		catch {
+			debug::log db "mk::file close db"
+			mk::file close db
+		}
 	}
 
 	# Name: ::db::connect
@@ -19,8 +22,14 @@ namespace eval db {
 	# Rets: Returns a handle that must be used to talk to the SQL database.
 	# Stat: In progress.
 	proc connect {} {
-		catch {
-			mk::file open db /tmp/data.mk4
+		array set opendbs [mk::file open]
+		if {[lsearch -exact [array names opendbs] db] == -1} {
+			debug::log db "mk::file open db $::config::db(filename) -extend -nocommit"
+			mk::file open db $::config::db(filename) -extend -nocommit
+
+			after idle {
+				db::disconnect
+			}
 		}
 	}
 
@@ -51,9 +60,11 @@ namespace eval db {
 			switch -- $fieldinfo {
 				"pk" {
 					::set type($fieldname) "S"
+					lappend uniquefields $fieldname
 				}
 				"k" {
 					::set type($fieldname) "S"
+					lappend uniquefields $fieldname
 				}
 				default {
 					::set type($fieldname) "B"
@@ -62,6 +73,13 @@ namespace eval db {
 
 			lappend newfields $fieldname
 		}
+
+		if {![info exists uniquefields]} {
+			::set uniquefield [list [lindex $newfields 0]]
+			::set uniquefields [list $uniquefield]
+			::set type($uniquefield) S
+		}
+
 		foreach field $newfields {
 			lappend fieldlist "$field:$type($field)"
 		}
@@ -69,8 +87,23 @@ namespace eval db {
 		hook::call db::create::enter $dbname $newfields
 
 		::set dbhandle [connect]
-		debug::log db "mk::view layout db.${dbname} $fieldlist"
+
+		if {[mk::view info db.__unique_fields] == ""} {
+			debug::log db [list mk::view layout db.__unique_fields {database:S fields:S}]
+			mk::view layout db.__unique_fields "database:S fields:S"
+		}
+
+		debug::log db "mk::row append db.__unique_fields"
+		::set cursor [mk::row append db.__unique_fields]
+
+		debug::log db [list mk::set $cursor database $dbname fields $uniquefields]
+		mk::set $cursor database $dbname fields $uniquefields
+
+		debug::log db [list mk::view layout db.${dbname} $fieldlist]
 		mk::view layout db.${dbname} $fieldlist
+
+		debug::log db "mk::file commit db"
+		mk::file commit db
 
 		hook::call db::create::return 1 $dbname $newfields
 
@@ -105,6 +138,7 @@ namespace eval db {
 			lappend fielddata [list $fieldname $fieldvalue]
 			lappend fieldnames $fieldname
 			lappend fieldvalues $fieldvalue
+			::set fieldmapping($fieldnames) $fieldvalues
 		}
 
 		if {[info exists where]} {
@@ -121,18 +155,57 @@ namespace eval db {
 			::set whereval [join [lrange $wherework 1 end] =]
 			::unset wherework
 
-			debug::log db "mk::select db.${dbname} -exact $wherevar $whereval"
+			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idx [lindex [mk::select db.${dbname} -exact $wherevar $whereval] 0]
 		} else {
-			debug::log db "mk::row append db.${dbname}"
-			::set idx [mk::row append db.${dbname}]
+			debug::log db "mk::select db.__unique_fields -exact database $dbname"
+			::set uniquefieldsidx [mk::select db.__unique_fields -exact database $dbname]
+
+			if {$uniquefieldsidx != ""} {
+				debug::log db      "mk::get db.__unique_fields!$uniquefieldsidx fields"
+				::set uniquefields [mk::get db.__unique_fields!$uniquefieldsidx fields]
+				debug::log db "   => $uniquefields"
+			} else {
+				::set uniquefields [list]
+				debug::log db "   => (not found)"
+			}
+
+			foreach chkuniquefield $uniquefields {
+				if {[lsearch -exact $fieldnames $chkuniquefield] != -1} {
+					lappend overlappingfields $chkuniquefield
+				}
+			}
+			if {[info exists overlappingfields]} {
+				debug::log db "  =overlap=> $overlappingfields"
+				::set cmdstr [list mk::select db.${dbname}]
+				foreach overlappingfield $overlappingfields {
+					lappend cmdstr -exact $overlappingfield $fieldmapping($overlappingfield)
+				}
+
+				debug::log db $cmdstr
+				::set idx [eval $cmdstr]
+				if {$idx == ""} {
+					::unset idx
+				}
+			}
+
+			if {![info exists idx]} {
+				debug::log db "mk::row append db.${dbname}"
+				::set idx [mk::row append db.${dbname}]
+
+				debug::log db "mk::cursor position idx  (idx = $idx)"
+				::set idx [mk::cursor position idx]
+			}
 		}
 		foreach fieldpair $fielddata {
 			::set fieldname [lindex $fieldpair 0]
 			::set fieldvalue [lindex $fieldpair 1]
-			debug::log db "mk::set ${idx} $fieldname $fieldvalue"
-			mk::set ${idx} $fieldname $fieldvalue
+			debug::log db [list mk::set db.${dbname}!${idx} $fieldname $fieldvalue]
+			mk::set db.${dbname}!${idx} $fieldname $fieldvalue
 		}
+		debug::log db "mk::file commit db"
+		mk::file commit db
+
 		::set ret 1
 
 		if {[info exists where]} {
@@ -176,31 +249,24 @@ namespace eval db {
 
 		::set dbhandle [connect]
 
-		if {[info exists fields]} {
-			::set ret 1
-			foreach field $fields {
-				debug::log db "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"
-				if {[catch {
-					::set rettmp [mysqlexec $dbhandle "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"]
-				}]} {
-					disconnect
-					::set dbhandle [connect]
-					::set rettmp [mysqlexec $dbhandle "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"]
+		debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+		::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
+
+		foreach idx $idxes {
+			if {[info exists fields]} {
+				foreach field $fields {
+					debug::log db [list mk::set db.${dbname}!${idx} $field ""]
+					mk::set db.${dbname}!${idx} $field ""
 				}
-				if {!$rettmp} {
-					::set ret 0
-				}
-			}
-		} else {
-			debug::log db "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
-			if {[catch {
-				::set ret [mysqlexec $dbhandle "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"]
-			}]} {
-				disconnect
-				::set dbhandle [connect]
-				::set ret [mysqlexec $dbhandle "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"]
+			} else {
+				debug::log db "mk::row delete db.${dbname}!${idx}"
+				mk::row delete db.${dbname}!${idx}
 			}
 		}
+		debug::log db "mk::file commit db"
+		mk::file commit db
+
+		::set ret 1
 
 		if {$ret} {
 			::set ret 1
@@ -266,7 +332,7 @@ namespace eval db {
 		::set dbhandle [connect]
 
 		if {[info exists where]} {
-			debug::log db "mk::select db.${dbname} -exact $wherevar $whereval"
+			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
 		} else {
 			debug::log db "mk::select db.${dbname}"
@@ -279,8 +345,8 @@ namespace eval db {
 				set tmplist [list]
 			}
 			foreach field $fields {
-				debug::log db "mk::get ${idx} $field"
-				::set fieldval [mk::get ${idx} $field]
+				debug::log db [list mk::get db.${dbname}!${idx} $field]
+				::set fieldval [mk::get db.${dbname}!${idx} $field]
 				switch -- $selmode {
 					"-list" {
 						lappend tmplist $fieldval
