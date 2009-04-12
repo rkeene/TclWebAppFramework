@@ -77,10 +77,6 @@ namespace eval db {
 			return -code error "error: Could not connect to SQL Server: $connectError"
 		}
 
-		after idle {
-			db::disconnect
-		}
-
 		hook::call db::connect::return $::db::CACHEDBHandle
 
 		return $::db::CACHEDBHandle
@@ -137,7 +133,14 @@ namespace eval db {
 
 		::set dbhandle [connect]
 		debug::log db "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
-		mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
+
+		if {[catch {
+			mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
+		}]} {
+			disconnect
+			::set dbhandle [connect]
+			mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
+		}
 
 		hook::call db::create::return 1 $dbname $newfields
 
@@ -193,7 +196,13 @@ namespace eval db {
 				lappend fieldassignlist "$fieldname=[sqlquote $fieldvalue]"
 			}
 			debug::log db "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
-			mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
+			if {[catch {
+				mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
+			}]} {
+				disconnect
+				::set dbhandle [connect]
+				mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
+			}
 			::set ret 1
 		} else {
 			if {[catch {
@@ -202,7 +211,14 @@ namespace eval db {
 			} insertError]} {
 				if {![info exists ::db::keys($dbname)]} {
 					debug::log db "DESCRIBE $dbname;"
-					foreach line [mysqlsel $dbhandle "DESCRIBE $dbname;" -list] {
+					if {[catch {
+						::set dbdesc [mysqlsel $dbhandle "DESCRIBE $dbname;" -list]
+					}]} {
+						disconnect
+						::set dbhandle [connect]
+						::set dbdesc [mysqlsel $dbhandle "DESCRIBE $dbname;" -list]
+					}
+					foreach line $dbdesc {
 						::set field [lindex $line 0]
 						::set keytype [string toupper [lindex $line 3]]
 						if {$keytype == "PRI" || $keytype == "UNI" || $keytype == "KEY"} {
@@ -223,7 +239,13 @@ namespace eval db {
 					lappend fieldassignlist "$fieldname=[sqlquote $fieldvalue]"
 				}
 				debug::log db "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
-				mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
+				if {[catch {
+					mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
+				}]} {
+					disconnect
+					::set dbhandle [connect]
+					mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
+				}
 				::set ret 1
 			}
 		}
@@ -277,14 +299,26 @@ namespace eval db {
 			::set ret 1
 			foreach field $fields {
 				debug::log db "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"
-				::set rettmp [mysqlexec $dbhandle "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"]
+				if {[catch {
+					::set rettmp [mysqlexec $dbhandle "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"]
+				}]} {
+					disconnect
+					::set dbhandle [connect]
+					::set rettmp [mysqlexec $dbhandle "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"]
+				}
 				if {!$rettmp} {
 					::set ret 0
 				}
 			}
 		} else {
 			debug::log db "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
-			::set ret [mysqlexec $dbhandle "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"]
+			if {[catch {
+				::set ret [mysqlexec $dbhandle "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"]
+			}]} {
+				disconnect
+				::set dbhandle [connect]
+				::set ret [mysqlexec $dbhandle "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"]
+			}
 		}
 
 		if {$ret} {
@@ -354,10 +388,22 @@ namespace eval db {
 
 		if {[info exists where]} {
 			debug::log db "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
-			::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];" $selmode]
+			if {[catch {
+				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];" $selmode]
+			}]} {
+				disconnect
+				::set dbhandle [connect]
+				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];" $selmode]
+			}
 		} else {
 			debug::log db "SELECT $fieldstr FROM $dbname;"
-			::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" $selmode]
+			if {[catch {
+				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" $selmode]
+			}]} {
+				disconnect
+				::set dbhandle [connect]
+				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" $selmode]
+			}
 		}
 
 		if {!$allbool} {
@@ -392,7 +438,15 @@ namespace eval db {
 
 		debug::log db "DESCRIBE $dbname;"
 
-		foreach line [mysqlsel $dbhandle "DESCRIBE $dbname;" -list] {
+		if {[catch {
+			::set dbdesc [mysqlsel $dbhandle "DESCRIBE $dbname;" -list]
+		}]} {
+			disconnect
+			::set dbhandle [connect]
+			::set dbdesc [mysqlsel $dbhandle "DESCRIBE $dbname;" -list]
+		}
+
+		foreach line $dbdesc {
 			::set field [lindex $line 0]
 			::set keytype [string toupper [lindex $line 3]]
 			if {$keytype == "PRI" || $keytype == "UNI" || $keytype == "KEY"} {
