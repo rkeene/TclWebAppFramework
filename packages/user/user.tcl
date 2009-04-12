@@ -194,6 +194,9 @@ namespace eval user {
 			return 0
 		}
 
+		# Invalidate cache
+		unset -nocomplain ::user::cache_get
+
 		hook::call user::delete::enter $uid
 
 		set success [db::unset -dbname user -where uid=$uid]
@@ -236,6 +239,9 @@ namespace eval user {
 		if {[hasflag "root" $uid] && ![hasflag "root"]} {
 			return 0
 		}
+
+		# Invalidate cache
+		unset -nocomplain ::user::cache_get
 
 		hook::call user::create::enter $uid $args
 
@@ -320,6 +326,10 @@ namespace eval user {
 	#	UID is specified as "ALL"
 	# Stat: In progress
 	proc get args {
+		if {[info exists ::user::cache_get($args)]} {
+			return $::user::cache_get($args)
+		}
+
 		for {set idx 0} {$idx < [llength $args]} {incr idx} {
 			set curr [lindex $args $idx]
 			switch -- $curr {

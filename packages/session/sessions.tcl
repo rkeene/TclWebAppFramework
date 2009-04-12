@@ -6,6 +6,15 @@ package require wa_uuid
 wa_uuid::register 110 session
 
 namespace eval session {
+	# Name: ::session::_mark_for_writing
+	# Args: var, idx, op
+	# Rets: 1
+	# Stat: In progress.
+	proc _mark_for_writing {var idx op} {
+		set ::session::vars_updated 1
+		return 1
+	}
+
 	# Name: ::session::create
 	# Args: (none)
 	# Rets: The `sessionid' of the new session
@@ -19,6 +28,8 @@ namespace eval session {
 
 		set ::session::vars(sessionid) $sessionid
 
+		set ::session::vars_updated 1
+
 		return $sessionid
 	}
 
@@ -28,13 +39,16 @@ namespace eval session {
 	# Rets: 1 on success, 0 otherwise
 	# Stat: In progress
 	proc load {sessionid} {
-		unset -nocomplain ::session::vars
+		unset -nocomplain ::session::vars ::session::vars_updated
+
 
 		foreach {var val} [db::get -dbname sessions -where sessionid=$sessionid -field data] {
 			set ::session::vars($var) $val
 		}
 
 		set ::session::id $sessionid
+
+		trace add variable ::session::vars [list write unset] ::session::_mark_for_writing
 
 		return 1
 	}
@@ -46,6 +60,12 @@ namespace eval session {
 	proc save {} {
 		if {![info exists ::session::id]} {
 			return 0
+		}
+
+		# If there have been no changes since the last "load", return
+		# success.
+		if {![info exists ::session::vars_updated]} {
+			return 1
 		}
 
 		set sessionid $::session::id
@@ -69,6 +89,8 @@ namespace eval session {
 	# Stat: In progress.
 	proc destroy {} {
 		unset -nocomplain ::session::vars
+
+		set ::session::vars_updated 1
 
 		return 1
 	}
