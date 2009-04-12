@@ -102,8 +102,10 @@ if {[catch {
 	}
 
 	if {[info exists args(action)]} {
+		debug::log index.rvt [list module::call $module $args(action) $subaction]
 		set newpage [module::call $module $args(action) $subaction]
 	} else {
+		debug::log index.rvt [list module::call $module "" $subaction]
 		set newpage [module::call $module "" $subaction]
 	}
 
