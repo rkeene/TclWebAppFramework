@@ -392,7 +392,11 @@ namespace eval db {
 		::set dbhandle [connect]
 
 		debug::log db "mk::view info db.${dbname}"
-		::set ret [mk::view info db.${dbname}]
+		::set fields [mk::view info db.${dbname}]
+		foreach field $fields {
+			set work [lindex [split $field :] 0]
+			lappend ret $work
+		}
 
 		return $ret
 	}
