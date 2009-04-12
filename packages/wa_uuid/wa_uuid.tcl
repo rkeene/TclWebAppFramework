@@ -1,11 +1,5 @@
 package provide wa_uuid 0.3
 
-if {[catch {
-	package require Tclx
-}]} {
-	package require Tclx-compat
-}
-
 namespace eval wa_uuid {
 	set types(unknown) 0
 
@@ -22,9 +16,9 @@ namespace eval wa_uuid {
 				set prefix 0
 			}
 		}
-		random seed [expr [random 32768] * $prefix + [pid] + [info cmdcount]]
+		expr srand(int((rand() * 32768) * $prefix) + [pid] + [info cmdcount])
 
-		set uuid [format "%x-%x-%x-%x%x" $prefix [random 2147483647] [random 2147483647] [random 2147483647] [pid]]
+		set uuid [format "%x-%x-%x-%x%x" $prefix [expr int(rand() * 2147483647)] [expr int(rand() * 2147483647)] [expr int(rand() * 2147483647)] [pid]]
 
 		return $uuid
 	}
