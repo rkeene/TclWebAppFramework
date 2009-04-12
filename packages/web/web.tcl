@@ -8,10 +8,7 @@ namespace eval web {
 
 		if {[info exists ::env(SCRIPT_NAME)]} {
 			set ::web::root $::env(SCRIPT_NAME)
-			# If we are a not starkit/starpack, exclude the name of the script
-			if {![info exists ::starkit::topdir]} {
-				set ::web::root [file dirname $::web::root]
-			}
+			set ::web::root [file dirname $::web::root]
 
 			return
 		}
