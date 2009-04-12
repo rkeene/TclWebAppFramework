@@ -78,7 +78,7 @@ namespace eval db {
 		}
 
 		after idle {
-			disconnect
+			db::disconnect
 		}
 
 		hook::call db::connect::return $::db::CACHEDBHandle
