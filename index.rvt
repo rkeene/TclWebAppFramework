@@ -9,13 +9,24 @@ if {[catch {
 	if {![info exists ::auto_path_set]} {
 		set ::auto_path_set 1
 		lappend auto_path local/packages packages
+	}
+
+	if {![info exists ::done_onlyonce_dbconfig]} {
+		if {[file exists modules/autoload/onlyonce/dbconfig.tcl]} {
+			source modules/autoload/onlyonce/dbconfig.tcl
+		}
+		if {[file exists local/modules/autoload/onlyonce/dbconfig.tcl]} {
+			source local/modules/autoload/onlyonce/dbconfig.tcl
+		}
+		set ::done_onlyonce_dbconfig 1
+	}
+
+	if {![info exists ::done_onlyonce]} {
 		package require module
 		package require debug
 		package require web
 		package require user
-	}
 
-	if {![info exists ::done_onlyonce]} {
 		foreach file [glob -nocomplain modules/*/load/*.tcl modules/load/onlyonce/*.tcl modules/autoload/onlyonce/*.tcl local/modules/*/load/*.tcl local/modules/load/onlyonce/*.tcl local/modules/autoload/onlyonce/*.tcl] {
 			debug::log index.rvt "source $file"
 			namespace eval :: "source $file"
