@@ -1,4 +1,4 @@
-package provide db 0.2
+package provide db 0.3.0
 
 package require mysqltcl
 package require hook

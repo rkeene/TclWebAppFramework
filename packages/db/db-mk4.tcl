@@ -1,4 +1,4 @@
-package provide db 0.3
+package provide db 0.3.0
 
 package require Mk4tcl
 package require hook
