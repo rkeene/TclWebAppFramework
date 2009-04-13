@@ -53,9 +53,9 @@ namespace eval db {
 			}
 
 			if {[info exists fd]} {
-				debug::log db "Unable to create lock file, opening read-only and hoping for the best."
 				::set readonly 0
 			} else {
+				debug::log db "Unable to create lock file, opening read-only and hoping for the best."
 				::set readonly 1
 			}
 
