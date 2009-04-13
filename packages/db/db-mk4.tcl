@@ -7,13 +7,29 @@ package require wa_uuid
 
 namespace eval db {
 	# Name: ::db::disconnect
-	# Args: (none)
+	# Args: 
+	#         readonly        Describe whether DB was open read-only or not
 	# Rets: 1 on success, 0 otherwise.
 	# Stat: In progress..
-	proc disconnect {} {
+	proc disconnect {{readonly 1}} {
+		# Verify that the DB is open
+		array set opendbs [mk::file open]
+		if {[lsearch -exact [array names opendbs] db] == -1} {
+			# If not, return without making any changes.
+			return
+		}
+
 		catch {
 			debug::log db "mk::file close db"
 			mk::file close db
+		}
+
+		if {!$readonly} {
+			::set lockfile $::config::db(filename).lock
+			catch {
+				debug::log db "Removing lockfile."
+				file delete -force -- $lockfile
+			}
 		}
 	}
 
@@ -24,12 +40,34 @@ namespace eval db {
 	proc connect {} {
 		array set opendbs [mk::file open]
 		if {[lsearch -exact [array names opendbs] db] == -1} {
-			debug::log db "mk::file open db $::config::db(filename) -extend -nocommit"
-			mk::file open db $::config::db(filename) -extend -nocommit
-
-			after idle {
-				db::disconnect
+			::set lockfile $::config::db(filename).lock
+			for {::set i 0} {$i < 300} {incr i} {
+				catch {
+					::set fd [open $lockfile [list WRONLY CREAT EXCL]]
+				}
+				if {[info exists fd]} {
+					close $fd
+					break
+				}
+				after 100
 			}
+
+			if {[info exists fd]} {
+				debug::log db "Unable to create lock file, opening read-only and hoping for the best."
+				::set readonly 0
+			} else {
+				::set readonly 1
+			}
+
+			if {$readonly} {
+				debug::log db [list mk::file open db $::config::db(filename) -nocommit -readonly]
+				mk::file open db $::config::db(filename) -nocommit -readonly
+			} else {
+				debug::log db [list mk::file open db $::config::db(filename) -nocommit]
+				mk::file open db $::config::db(filename) -nocommit
+			}
+
+			after idle [list db::disconnect $readonly]
 		}
 	}
 
