@@ -22,15 +22,7 @@ namespace eval session {
 	proc create {} {
 		unset -nocomplain ::session::vars ::session::id
 
-		while 1 {
-			set sessionid [wa_uuid::gen session]
-			set sessiondata [db::get -dbname sessions -where sessionid=$sessionid -field data]
-			if {$sessiondata != ""} {
-				debug::log session "*** DUPLICATE SESSION CREATION ATTEMPT ! ***"
-			} else {
-				break
-			}
-		}
+		set sessionid [wa_uuid::gen session]
 
 		set ::session::id $sessionid
 
