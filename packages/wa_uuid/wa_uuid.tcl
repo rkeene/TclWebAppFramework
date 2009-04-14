@@ -18,7 +18,7 @@ namespace eval wa_uuid {
 		}
 		expr srand(int((rand() * 32768) * $prefix) + [pid] + [info cmdcount])
 
-		set uuid [format "%x-%x-%x-%x%x" $prefix [expr int(rand() * 2147483647)] [expr int(rand() * 2147483647)] [expr int(rand() * 2147483647)] [pid]]
+		set uuid [format "%x-%x-%x-%x%x%x" $prefix [expr int(rand() * 2147483647)] [clock clicks] [clock seconds] [expr int(rand() * 2147483647)] [pid]]
 
 		return $uuid
 	}

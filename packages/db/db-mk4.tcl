@@ -63,8 +63,8 @@ namespace eval db {
 				debug::log db [list mk::file open db $::config::db(filename) -nocommit -readonly]
 				mk::file open db $::config::db(filename) -nocommit -readonly
 			} else {
-				debug::log db [list mk::file open db $::config::db(filename) -nocommit]
-				mk::file open db $::config::db(filename) -nocommit
+				debug::log db [list mk::file open db $::config::db(filename) -extend -nocommit]
+				mk::file open db $::config::db(filename) -extend -nocommit
 			}
 
 			after idle [list db::disconnect $readonly]
