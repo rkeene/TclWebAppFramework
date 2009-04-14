@@ -91,8 +91,8 @@ namespace eval ::db {
 			}
 		}
 
-		debug::log db [list mk::file open db $::config::db(filename) -nocommit -extend]
-		mk::file open db $::config::db(filename) -nocommit -extend
+		debug::log db [list mk::file open db $::config::db(filename) -nocommit]
+		mk::file open db $::config::db(filename) -nocommit
 
 		catch {
 			debug::log db [list mk::set db.__webapplockingsystem!0 lockholder $::db::lockingstr]
