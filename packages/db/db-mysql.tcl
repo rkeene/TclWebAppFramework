@@ -1,11 +1,11 @@
-package provide db 0.3.0
+package provide db 0.4.0
 
 package require mysqltcl
 package require hook
 package require debug
 package require wa_uuid
 
-namespace eval db {
+namespace eval ::db {
 	# Proc: ::db::sqlquote
 	# Args: 
 	#	str		String to be quoted

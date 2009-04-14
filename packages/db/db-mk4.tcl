@@ -1,17 +1,42 @@
-package provide db 0.3.0
+package provide db 0.4.0
 
 package require Mk4tcl
 package require hook
 package require debug
 package require wa_uuid
 
-namespace eval db {
+namespace eval ::db {
+	proc __commit {{giveup 0}} {
+		if {[info exists ::db::lockingstr]} {
+			::set currlockholder [mk::get db.__webapplockingsystem!0 lockholder]
+			if {$currlockholder != $::db::lockingstr} {
+				return 0
+				debug::log db::__commit "Unable to commit changes (lost lock)"
+			}
+		}
+
+		if {[catch {
+			if {$giveup} {
+				debug::log db [list mk::set db.__webapplockingsystem!0 lockholder ""]
+				mk::set db.__webapplockingsystem!0 lockholder ""
+			}
+
+			debug::log db [list mk::file commit db]
+			mk::file commit db
+		} err]} {
+			debug::log db "   ** failed **"
+			debug::log db::__commit "Unable to commit changes ($err)"
+			return 0
+		}
+
+		return 1
+	}
+
 	# Name: ::db::disconnect
-	# Args: 
-	#         readonly        Describe whether DB was open read-only or not
+	# Args: (none)
 	# Rets: 1 on success, 0 otherwise.
 	# Stat: In progress..
-	proc disconnect {{readonly 1}} {
+	proc disconnect {} {
 		# Verify that the DB is open
 		array set opendbs [mk::file open]
 		if {[lsearch -exact [array names opendbs] db] == -1} {
@@ -19,17 +44,14 @@ namespace eval db {
 			return
 		}
 
-		catch {
+		__commit 1
+
+		if {[catch {
 			debug::log db "mk::file close db"
 			mk::file close db
-		}
-
-		if {!$readonly} {
-			::set lockfile $::config::db(filename).lock
-			catch {
-				debug::log db "Removing lockfile."
-				file delete -force -- $lockfile
-			}
+		} err]} {
+			debug::log db "  ** failed **"
+			debug::log db::disconnect "Error while closing DB: $err"
 		}
 	}
 
@@ -39,36 +61,48 @@ namespace eval db {
 	# Stat: In progress.
 	proc connect {} {
 		array set opendbs [mk::file open]
-		if {[lsearch -exact [array names opendbs] db] == -1} {
-			::set lockfile $::config::db(filename).lock
-			for {::set i 0} {$i < 300} {incr i} {
+		if {[lsearch -exact [array names opendbs] db] != -1} {
+			return
+		}
+
+		if {[file exists $::config::db(filename)]} {
+			::set ::db::lockingstr [wa_uuid::gen]
+
+			# Try to open the DB with a read-write lock
+			while 1 {
+				debug::log db [list mk::file open db $::config::db(filename) -readonly]
+				mk::file open db $::config::db(filename) -readonly
+
+				::set currlockholder "FAIL"
 				catch {
-					::set fd [open $lockfile [list WRONLY CREAT EXCL]]
+					::set currlockholder [mk::get db.__webapplockingsystem!0 lockholder]
 				}
-				if {[info exists fd]} {
-					close $fd
+
+				debug::log db [list mk::file close db]
+				mk::file close db
+
+				if {$currlockholder == ""} {
 					break
 				}
-				after 100
-			}
 
-			if {[info exists fd]} {
-				::set readonly 0
-			} else {
-				debug::log db "Unable to create lock file, opening read-only and hoping for the best."
-				::set readonly 1
-			}
+				debug::log db::connect "Unable to lock database, already held by $currlockholder -- waiting."
+				after [expr int(rand() * 10000)]
 
-			if {$readonly} {
-				debug::log db [list mk::file open db $::config::db(filename) -nocommit -readonly]
-				mk::file open db $::config::db(filename) -nocommit -readonly
-			} else {
-				debug::log db [list mk::file open db $::config::db(filename) -extend -nocommit]
-				mk::file open db $::config::db(filename) -extend -nocommit
 			}
-
-			after idle [list db::disconnect $readonly]
 		}
+
+		debug::log db [list mk::file open db $::config::db(filename) -nocommit -extend]
+		mk::file open db $::config::db(filename) -nocommit -extend
+
+		catch {
+			debug::log db [list mk::set db.__webapplockingsystem!0 lockholder $::db::lockingstr]
+			mk::set db.__webapplockingsystem!0 lockholder $::db::lockingstr
+
+			debug::log db [list mk::file commit db]
+			mk::file commit db
+		}
+
+		after idle [list db::disconnect]
 	}
 
 	# Name: ::db::create
@@ -126,9 +160,15 @@ namespace eval db {
 
 		::set dbhandle [connect]
 
+		if {[mk::view info db.__webapplockingsystem] == ""} {
+			debug::log db [list mk::view layout db.__webapplockingsystem [list lockholder:S]]
+			mk::view layout db.__webapplockingsystem [list lockholder:S]
+			mk::set db.__webapplockingsystem!0 lockholder ""
+		}
+
 		if {[mk::view info db.__unique_fields] == ""} {
-			debug::log db [list mk::view layout db.__unique_fields {database:S fields:S}]
-			mk::view layout db.__unique_fields "database:S fields:S"
+			debug::log db [list mk::view layout db.__unique_fields [list database:S fields:S]]
+			mk::view layout db.__unique_fields [list database:S fields:S]
 		}
 
 		debug::log db "mk::row append db.__unique_fields"
@@ -200,12 +240,12 @@ namespace eval db {
 			::set uniquefieldsidx [mk::select db.__unique_fields -exact database $dbname]
 
 			if {$uniquefieldsidx != ""} {
-				debug::log db      "mk::get db.__unique_fields!$uniquefieldsidx fields"
+				debug::log db "mk::get db.__unique_fields!$uniquefieldsidx fields"
 				::set uniquefields [mk::get db.__unique_fields!$uniquefieldsidx fields]
-				debug::log db "   => $uniquefields"
+				debug::log db "   ** $uniquefields **"
 			} else {
 				::set uniquefields [list]
-				debug::log db "   => (not found)"
+				debug::log db "   ** (not found) **"
 			}
 
 			foreach chkuniquefield $uniquefields {
@@ -214,7 +254,7 @@ namespace eval db {
 				}
 			}
 			if {[info exists overlappingfields]} {
-				debug::log db "  =overlap=> $overlappingfields"
+				debug::log db "   ** (overlap) $overlappingfields **"
 				::set cmdstr [list mk::select db.${dbname}]
 				foreach overlappingfield $overlappingfields {
 					lappend cmdstr -exact $overlappingfield $fieldmapping($overlappingfield)
@@ -241,8 +281,8 @@ namespace eval db {
 			debug::log db [list mk::set db.${dbname}!${idx} $fieldname $fieldvalue]
 			mk::set db.${dbname}!${idx} $fieldname $fieldvalue
 		}
-		debug::log db "mk::file commit db"
-		mk::file commit db
+
+		__commit
 
 		::set ret 1
 
@@ -301,8 +341,8 @@ namespace eval db {
 				mk::row delete db.${dbname}!${idx}
 			}
 		}
-		debug::log db "mk::file commit db"
-		mk::file commit db
+
+		__commit
 
 		::set ret 1
 
