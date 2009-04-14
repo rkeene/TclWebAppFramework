@@ -131,11 +131,19 @@ if {[catch {
 		source $file
 	}
 } errmsg]} {
-	set savedtrace $errorInfo
+	set savedtrace $::errorInfo
+
+	catch {
+		namespace delete cache
+	}
+
+	catch {
+		update idletasks
+	}
 
 	# Throw the error again if there's an error handler
 	if {[namespace which -command rivet_error] != ""} {
-		error $errmsg $errorInfo
+		error $errmsg $savedtrace
 	} else {
 		# Otherwise, handle it ourselves.
 		puts "<HTML>"
@@ -150,5 +158,11 @@ if {[catch {
 	}
 }
 
-	namespace delete cache
+	catch {
+		update idletasks
+	}
+
+	catch {
+		namespace delete cache
+	}
 ?>
