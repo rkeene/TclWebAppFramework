@@ -69,22 +69,38 @@ namespace eval user {
 			return 0
 		}
 
+		hook::call user::login $uid $pass $from
+
 		set realpass [get -uid $uid -pass]
 		set realsalt [string range $realpass 0 1]
 		set chkpass [crypt $pass $realsalt]
 
 		if {$chkpass != $realpass} {
 			debug::log user::login "Failed password ($chkpass != $realpass)"
-			return 0
+
+			set retval 0
+
+			hook::call user::login::return $uid $pass $from $retval
+
+			debug::log user::login "Login for $uid, returning $retval"
+
+			return $retval
 		}
 
 		set seturet [user::setuid $uid 1]
 		if {$seturet == 0} {
 			debug::log user::login "Could not setuid !"
-			return 0
+
+			set retval 0
+		} else {
+			set retval 1
 		}
 
-		return 1
+		hook::call user::login::return $uid $pass $from $retval
+
+		debug::log user::login "Login for $uid, returning $retval"
+
+		return $retval
 	}
 
 	# Name: ::user::create
@@ -702,6 +718,12 @@ namespace eval user {
 	# Rets: 1 on success, 0 otherwise
 	# Stat: In progress
 	proc setuid {newuid {override 0}} {
+		if {[info exists ::session::vars(uid)]} {
+			debug::log user::setuid "Asked to setuid to $newuid, from $::session::vars(uid)"
+		} else {
+			debug::log user::setuid "Asked to setuid to $newuid, from nothing"
+		}
+
 		if {$newuid == 0} {
 			return 0
 		}

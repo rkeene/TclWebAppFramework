@@ -11,6 +11,10 @@ namespace eval session {
 	# Rets: 1
 	# Stat: In progress.
 	proc _mark_for_writing {var idx op} {
+		catch {
+			debug::log session::__mark_for_writing "Session variable ($var) index \"$idx\" has been written or unset ($op) (from [string range [info level -1] 0 50])"
+		}
+
 		set ::session::vars_updated 1
 		return 1
 	}

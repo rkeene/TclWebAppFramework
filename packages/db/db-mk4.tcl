@@ -420,7 +420,7 @@ namespace eval ::db {
 		::set ret [list]
 		foreach idx $idxes {
 			if {$selmode == "-list"} {
-				set tmplist [list]
+				::set tmplist [list]
 			}
 			foreach field $fields {
 				debug::log db [list mk::get db.${dbname}!${idx} $field]

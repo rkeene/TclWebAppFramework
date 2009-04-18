@@ -30,7 +30,10 @@ if {[user::getuid] == "0" || [info exists args(user)]} {
 
 	if {$user_ok && $uid != "0"} {
 		set ::session::vars(user) $args(user)
-		user::setuid $uid
+		set suidret [user::setuid $uid]
+
+		debug::log sessions.tcl "Switching to UID $uid... $suidret"
+		
 	} else {
 		unset -nocomplain ::session::vars(user)
 		user::setuid [user::getuid anonymous]
