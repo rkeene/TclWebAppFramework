@@ -171,8 +171,16 @@ namespace eval ::db {
 			mk::view layout db.__unique_fields [list database:S fields:S]
 		}
 
-		debug::log db "mk::row append db.__unique_fields"
-		::set cursor [mk::row append db.__unique_fields]
+		::set chkidx [mk::select db.__unique_fields -exact database $dbname]
+		if {$chkidx != ""} {
+			::set chkidx [lindex $chkidx 0]
+
+			::set cursor "db.__unique_fields!${chkidx}"
+			debug::log db "Database already found, updating unique fields: $cursor"
+		} else {
+			debug::log db "mk::row append db.__unique_fields"
+			::set cursor [mk::row append db.__unique_fields]
+		}
 
 		debug::log db [list mk::set $cursor database $dbname fields $uniquefields]
 		mk::set $cursor database $dbname fields $uniquefields
@@ -216,7 +224,7 @@ namespace eval ::db {
 			lappend fielddata [list $fieldname $fieldvalue]
 			lappend fieldnames $fieldname
 			lappend fieldvalues $fieldvalue
-			::set fieldmapping($fieldnames) $fieldvalues
+			::set fieldmapping($fieldname) $fieldvalue
 		}
 
 		if {[info exists where]} {
@@ -240,6 +248,9 @@ namespace eval ::db {
 			::set uniquefieldsidx [mk::select db.__unique_fields -exact database $dbname]
 
 			if {$uniquefieldsidx != ""} {
+				debug::log db "uniquefieldsidx = $uniquefieldsidx"
+				::set uniquefieldsidx [lindex $uniquefieldsidx 0]
+
 				debug::log db "mk::get db.__unique_fields!$uniquefieldsidx fields"
 				::set uniquefields [mk::get db.__unique_fields!$uniquefieldsidx fields]
 				debug::log db "   ** $uniquefields **"
