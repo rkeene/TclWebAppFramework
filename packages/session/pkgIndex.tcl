@@ -8,4 +8,4 @@
 # script is sourced, the variable $dir must contain the
 # full path name of this file's directory.
 
-package ifneeded session 0.3 [list source [file join $dir sessions.tcl]]
+package ifneeded session 0.4 [list source [file join $dir sessions.tcl]]

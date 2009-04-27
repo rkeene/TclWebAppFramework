@@ -1,4 +1,4 @@
-package provide session 0.3
+package provide session 0.4
 
 package require db
 package require wa_uuid
@@ -11,6 +11,13 @@ namespace eval session {
 	# Rets: 1
 	# Stat: In progress.
 	proc _mark_for_writing {var idx op} {
+		# If the entire variable is being unset, do not consider it a
+		# sign that we need to update the db -- if that is needed, a
+		# db::destroy will explicitly make it so.
+		if {$idx == ""} {
+			return 1
+		}
+
 		catch {
 			debug::log session::__mark_for_writing "Session variable ($var) index \"$idx\" has been written or unset ($op) (from [string range [info level -1] 0 50])"
 		}
@@ -83,6 +90,8 @@ namespace eval session {
 			set ret [db::unset -dbname sessions -where sessionid=$sessionid]
 		}
 
+		unset -nocomplain ::session::vars_updated
+
 		return $ret
 	}
 
@@ -94,6 +103,18 @@ namespace eval session {
 		unset -nocomplain ::session::vars
 
 		set ::session::vars_updated 1
+
+		return 1
+	}
+
+	# Name: ::session::unload
+	# Args: (none)
+	# Rets: 1 on success, 0 otherwise
+	# Stat: In progress.
+	# Note: This should be called after saving when you no longer care
+	#       about the session locally.
+	proc unload {} {
+		unset -nocomplain ::session::vars
 
 		return 1
 	}
