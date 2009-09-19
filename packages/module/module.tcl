@@ -1,4 +1,4 @@
-package provide module 0.1
+package provide module 0.2
 
 package require user
 
@@ -75,7 +75,13 @@ namespace eval module {
 			set action "main"
 		}
 
+		namespace eval ::request::module {}
+
+		lappend ::request::module::currentmodule $module
+
 		set ret [${module}::${action} $subaction]
+
+		set ::request::module::currentmodule [lrange $::request::module::currentmodule 0 end-1]
 
 		return $ret
 	}
@@ -132,5 +138,20 @@ namespace eval module {
 		}
 
 		return $ret
+	}
+
+	# Name: ::module::current
+	# Args: (none)
+	# Rets: The name of the current module being called, or an
+	#       empty string if called from the global scope
+	# Stat: In progress
+	proc current {} {
+		if {[info exists ::request::module::currentmodule]} {
+			set retval $::request::module::currentmodule
+		} else {
+			set retval ""
+		}
+
+		return $retval
 	}
 }
