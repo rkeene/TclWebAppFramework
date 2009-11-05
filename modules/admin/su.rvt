@@ -2,52 +2,33 @@
 <?
 	puts [web::generate_vars form]
 
-	if {[info exists ::request::args(set_sort)]} {
-		set sortidx $::request::args(set_sort)
-	} else {
-		set sortidx 0
-	}
+	set sortidx [web::getarg set_sort 0]
 ?>
   <table>
     <tr>
       <td>Sort:</td>
       <td>
-         <select size="1" name="set_sort">
-           <option value="0"<?
-	if {$sortidx == 0} { puts -nonewline " selected" }
-?>>Unsorted</option>
-           <option value="1"<?
-	if {$sortidx == 1} { puts -nonewline " selected" }
-?>>User Name</option>
-           <option value="2"<?
-	if {$sortidx == 2} { puts -nonewline " selected" }
-?>>Full Name</option>
-         </select>
-         <input type="submit" name="subaction" value="Change">
+        <? web::widget::dropdown set_sort [list [list 0 Unsorted] [list 1 "User Name"] [list 2 "Full Name"]] 0 ?>
+        <input type="submit" name="subaction" value="Change">
       </td>
     </tr>
     <tr>
       <td>Users:</td>
       <td>
-        <select name="newuid" size="5">
-<?
-	foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
-		set newuid [lindex $userinfo 0]
-		set newuser [lindex $userinfo 1]
-		set newname [lindex $userinfo 2]
-		if {[info exists ::request::args(newuid)]} {
-			if {[lsearch -exact $::request::args(newuid) $newuid] != -1} {
-				set selected " selected"
-			} else {
-				set selected ""
-			}
-		} else {
-			set selected ""
+
+        <?
+		set users [list]
+		foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
+			set user_uid [lindex $userinfo 0]
+			set user_user [lindex $userinfo 1]
+			set user_name [lindex $userinfo 2]
+
+			lappend users [list $user_uid "$user_user ($user_name)"]
 		}
-		puts "<option value=\"$newuid\"${selected}>$newuser ($newname)</option>"
-	}
-?>
-        </select>
+
+		web::widget::listbox newuid $users 5 1
+        ?>
+
       </td>
     </tr>
   </table>
