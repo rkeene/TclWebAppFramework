@@ -50,28 +50,9 @@
 	for {set cnt 0} {$cnt < $numopts} {incr cnt} {
 ?>
         <tr>
-          <td>
-<?
-	if {[info exists ::request::args(set_opt_${cnt}_name)]} {
-		set value "$::request::args(set_opt_${cnt}_name)"
-	} else {
-		set value ""
-	}
-	puts "            <input type=\"text\" name=\"set_opt_${cnt}_name\" value=\"$value\">"
-
-?>
-          </td>
+          <td><? web::widget::entry set_opt_${cnt}_name ?></td>
           <td>=</td>
-          <td>
-<?
-	if {[info exists ::request::args(set_opt_${cnt}_val)]} {
-		set value "$::request::args(set_opt_${cnt}_val)"
-	} else {
-		set value ""
-	}
-	puts "            <input type=\"text\" name=\"set_opt_${cnt}_val\" value=\"$value\">"
-?>
-          </td>
+          <td><? web::widget::entry set_opt_${cnt}_val ?></td>
         </tr>
 <?
 	}
