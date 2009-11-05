@@ -8,32 +8,22 @@
 <table>
   <tr>
     <td>Username:</td>
-    <td><input type="text" name="set_username"<?
-if {[info exists ::request::args(set_username)]} {
-	puts -nonewline " value=\"$::request::args(set_username)\""
-}
-?>></td>
+    <td><? web::widget::entry set_username ?></td>
   </tr>
   <tr>
     <td>Full Name:</td>
-    <td><input type="text" name="set_fullname"<?
-if {[info exists ::request::args(set_fullname)]} {
-	puts -nonewline " value=\"$::request::args(set_fullname)\""
-}
-?>></td>
+    <td><? web::widget::entry set_fullname ?></td>
   </tr>
   <tr>
     <td>Password:</td>
-    <td><input type="password" name="set_password"<?
-if {[info exists ::request::args(set_password)]} {
-	puts -nonewline " value=\"$::request::args(set_password)\""
-}
-?>></td>
+    <td><? web::widget::password set_password ?></td>
   </tr>
   <tr>
     <td>Flags:</td>
     <td>
 <?
+
+#	set flaglist [list]
 	foreach flag [user::flaglist] {
 		set flaginfo [lindex [split $flag :] 1]
 		set flag [lindex [split $flag :] 0]
@@ -43,12 +33,11 @@ if {[info exists ::request::args(set_password)]} {
 				set extra " (unassociated)"
 			}
 		}
-		if {[info exists ::request::args(set_flag_${flag})]} {
-			puts "<input type=\"checkbox\" name=\"set_flag_${flag}\" checked value=\"set\"> $flag$extra<br>"
-		} else {
-			puts "<input type=\"checkbox\" name=\"set_flag_${flag}\" value=\"set\"> $flag$extra<br>"
-		}
+
+#		lappend flaglist [list set_flag_${flag} "${flag}${extra}"]
+		web::widget::checkbox set_flag_${flag} set "${flag}${extra}"
 	}
+
 ?>
     </td>
   </tr>
