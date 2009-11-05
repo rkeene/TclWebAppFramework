@@ -1,6 +1,6 @@
-package provide web 0.2
+package provide web 0.3
 
-namespace eval web {
+namespace eval ::web {
 	proc _set_root {} {
 		if {[info exists ::web::root]} {
 			return
@@ -139,5 +139,58 @@ namespace eval web {
 			return $::request::args($argname)
 		}
 		return $default
+	}
+
+	namespace eval ::web::widget {
+		proc entry {name {default ""} {type text}} {
+			set currval [::web::getarg $name $default]
+
+			puts -nonewline "<input type=\"$type\" name=\"$name\" value=\"$currval\">"
+		}
+
+		proc password {name {default ""}} {
+			return [entry $name $default password]
+		}
+
+		proc dropdown {name entries multiple {default ""} {size 1}} {
+			set currval [::web::getarg $name $default]
+
+			if {$multiple} {
+				puts "<select name=\"$name\" size=\"$size\" multiple>"
+			} else {
+				puts "<select name=\"$name\" size=\"$size\">"
+			}
+
+			foreach entry $entries {
+				set entry_val [lindex $entry 0]
+				set entry_desc [lindex $entry 1]
+
+				if {$entry_val == $currval} {
+					set selected " selected"
+				} else {
+					set selected ""
+				}
+
+				puts "  <option value=\"$entry_val\"${selected}>$entry_desc</option>"
+			}
+
+			puts "</select>"
+		}
+
+		proc listbox {name entries size multiple {default ""}} {
+			return [dropdown $name $entries $multiple $default $size]
+		}
+
+		proc checkbox {name checkedvalue text {default ""}} {
+			set currval [::web::getarg $name $default]
+
+			if {$currval == $checkedvalue} {
+				set checked " checked"
+			} else {
+				set checked ""
+			}
+
+			puts -nonewline "<input type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}>"
+		}
 	}
 }
