@@ -190,7 +190,7 @@ namespace eval ::web {
 				set checked ""
 			}
 
-			puts -nonewline "<input type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}>"
+			puts -nonewline "<input type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
 		}
 	}
 }
