@@ -240,6 +240,10 @@ namespace eval admin {
 			return [main]
 		}
 
+		if {$subact == "change"} {
+			return "su.rvt"
+		}
+
 		if {![user::hasflag "root"]} {
 			unset -nocomplain ::request::args(newuid) ::request::args(action)
 			return ""
