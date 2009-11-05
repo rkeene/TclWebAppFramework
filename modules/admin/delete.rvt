@@ -2,52 +2,30 @@
 <?
 	puts [web::generate_vars form]
 
-	if {[info exists ::request::args(set_sort)]} {
-		set sortidx $::request::args(set_sort)
-	} else {
-		set sortidx 0
-	}
+	set sortidx [web::getarg set_sort 0]
 ?>
   <table>
     <tr>
       <td>Sort:</td>
       <td>
-         <select size="1" name="set_sort">
-           <option value="0"<?
-	if {$sortidx == 0} { puts -nonewline " selected" }
-?>>Unsorted</option>
-           <option value="1"<?
-	if {$sortidx == 1} { puts -nonewline " selected" }
-?>>User Name</option>
-           <option value="2"<?
-	if {$sortidx == 2} { puts -nonewline " selected" }
-?>>Full Name</option>
-         </select>
+         <? web::widget::dropdown set_sort [list [list 0 Unsorted] [list 1 "User Name"] [list 2 "Full Name"]] 0 ?>
          <input type="submit" name="subaction" value="Change">
       </td>
     </tr>
     <tr>
       <td>Users:</td>
       <td>
-        <select name="do_delusers" size="5" multiple>
-<?
-	foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
-		set del_uid [lindex $userinfo 0]
-		set del_user [lindex $userinfo 1]
-		set del_name [lindex $userinfo 2]
-		if {[info exists ::request::args(do_delusers)]} {
-			if {[lsearch -exact $::request::args(do_delusers) $del_uid] != -1} {
-				set selected " selected"
-			} else {
-				set selected ""
-			}
-		} else {
-			set selected ""
+        <?
+		set delusers [list]
+		foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
+			set del_uid [lindex $userinfo 0]
+			set del_user [lindex $userinfo 1]
+			set del_name [lindex $userinfo 2]
+			lappend delusers [list $del_uid "$del_user ($del_name)"]
 		}
-		puts "<option value=\"$del_uid\"${selected}>$del_user ($del_name)</option>"
-	}
-?>
-        </select>
+
+		web::widget::listbox do_delusers $delusers 5 1
+	?>
       </td>
     </tr>
   </table>
