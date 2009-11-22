@@ -1,9 +1,9 @@
 <form action="." method="post">
 <?
-	set usercount [llength $::request::args(modusers)]
+	set usercount [llength $::request::args(set_modusers)]
 	if {$usercount == 1} {
 		set changechecked " checked"
-		set uid [lindex $::request::args(modusers) 0]
+		set uid [lindex $::request::args(set_modusers) 0]
 		set ::request::args(set_username) [user::get -uid $uid -user]
 		set ::request::args(set_fullname) [user::get -uid $uid -name]
 		foreach flag [user::get -uid $uid -flags] {
@@ -48,7 +48,7 @@ if {[info exists ::request::args(set_username)]} {
     <td>
       <select name="do_exclude" size="3" multiple>
 <?
-	foreach uid $::request::args(modusers) {
+	foreach uid $::request::args(set_modusers) {
 		set username [user::getnam $uid]
 		set fullname [user::get -uid $uid -name]
 		set extra ""

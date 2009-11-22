@@ -22,13 +22,21 @@ namespace eval ::web {
 		set ret ""
 		for {set i 0} {$i<[string length $str]} {incr i} {
 			set char [string index $str $i]
-			if {[regexp {^[A-Za-z0-9.-]$} $char]} {
+			if {[regexp {^[A-Za-z0-9._-]$} $char]} {
 				append ret $char
 			} else {
 				set ascii [scan $char "%c"]
 				append ret %[format "%02x" $ascii]
 			}
 		}
+
+		return $ret
+	}
+
+	proc convert_html_entities {str} {
+		set mappings [list "&" "&amp;" "<" "&lt;" ">" "&gt;" {"} "&quot;" {"} "Make VIM Happy"]
+
+		set ret [string map $mappings $str]
 
 		return $ret
 	}
@@ -145,6 +153,9 @@ namespace eval ::web {
 		proc entry {name {default ""} {type text}} {
 			set currval [::web::getarg $name $default]
 
+			set name [::web::convert_html_entities $name]
+			set currval [::web::convert_html_entities $currval]
+
 			puts -nonewline "<input type=\"$type\" name=\"$name\" value=\"$currval\">"
 		}
 
@@ -154,6 +165,8 @@ namespace eval ::web {
 
 		proc dropdown {name entries multiple {default ""} {size 1}} {
 			set currval [::web::getarg $name $default]
+
+			set name [::web::convert_html_entities $name]
 
 			if {$multiple} {
 				puts "<select name=\"$name\" size=\"$size\" multiple>"
@@ -170,6 +183,9 @@ namespace eval ::web {
 				} else {
 					set selected ""
 				}
+
+				set entry_val [::web::convert_html_entities $entry_val]
+				set entry_desc [::web::convert_html_entities $entry_desc]
 
 				puts "  <option value=\"$entry_val\"${selected}>$entry_desc</option>"
 			}
@@ -189,6 +205,9 @@ namespace eval ::web {
 			} else {
 				set checked ""
 			}
+
+			set name [::web::convert_html_entities $name]
+			set checkedvalue [::web::convert_html_entities $checkedvalue]
 
 			puts -nonewline "<input type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
 		}

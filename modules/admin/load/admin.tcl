@@ -121,7 +121,7 @@ namespace eval admin {
 
 	proc modify args {
 		if {$args == "cancel"} {
-			unset -nocomplain ::request::args(action) ::request::args(numopts) ::request::args(modusers)
+			unset -nocomplain ::request::args(action) ::request::args(numopts) ::request::args(set_modusers)
 			return [main]
 		}
 		if {$args == "change"} {
@@ -141,12 +141,12 @@ namespace eval admin {
 			return "modify.rvt"
 		}
 
-		if {[info exists ::request::args(modusers)] && $args == "modify"} {
+		if {[info exists ::request::args(set_modusers)] && $args == "modify"} {
 			# Now to actually update the specified users.
 			if {![info exists ::request::args(do_exclude)]} {
 				set ::request::args(do_exclude) ""
 			}
-			foreach uid $::request::args(modusers) {
+			foreach uid $::request::args(set_modusers) {
 				if {[lsearch -exact $::request::args(do_exclude) $uid] != -1} {
 					continue
 				}
@@ -216,11 +216,11 @@ namespace eval admin {
 				}
 			}
 
-			unset -nocomplain ::request::args(action) ::request::args(numopts) ::request::args(modusers) ::request::args(do_exclude)
+			unset -nocomplain ::request::args(action) ::request::args(numopts) ::request::args(set_modusers) ::request::args(do_exclude)
 			return [main]
 		}
 
-		if {[info exists ::request::args(modusers)] && !$update} {
+		if {[info exists ::request::args(set_modusers)] && !$update} {
 			return "modify.rvt"
 		}
 
@@ -264,4 +264,4 @@ namespace eval admin {
 	}
 }
 
-module::register admin [list admin] admin.png "User Administration"
+module::register admin [list admin] admin.png "Site Administration"
