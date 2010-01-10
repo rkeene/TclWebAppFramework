@@ -27,7 +27,7 @@ if {[catch {
 		package require web
 		package require user
 
-		foreach file [glob -nocomplain modules/*/load/*.tcl modules/load/onlyonce/*.tcl modules/autoload/onlyonce/*.tcl local/modules/*/load/*.tcl local/modules/load/onlyonce/*.tcl local/modules/autoload/onlyonce/*.tcl] {
+		foreach file [glob -nocomplain local/modules/*/preload/*.tcl modules/*/load/*.tcl modules/load/onlyonce/*.tcl modules/autoload/onlyonce/*.tcl local/modules/*/load/*.tcl local/modules/load/onlyonce/*.tcl local/modules/autoload/onlyonce/*.tcl] {
 			debug::log index.rvt "source $file"
 			namespace eval :: "source $file"
 		}
@@ -44,7 +44,7 @@ if {[catch {
 	}
 
 	set state INIT
-	foreach file [glob -nocomplain modules/load/*.tcl modules/autoload/*.tcl local/modules/load/*.tcl local/modules/autoload/*.tcl] {
+	foreach file [glob -nocomplain local/modules/preload/*.tcl modules/load/*.tcl modules/autoload/*.tcl local/modules/load/*.tcl local/modules/autoload/*.tcl] {
 		debug::log index.rvt "source $file"
 		source $file
 	}
