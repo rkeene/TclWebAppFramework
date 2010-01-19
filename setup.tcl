@@ -97,7 +97,7 @@ db::create -dbname user -fields [list uid user name flags opts pass]
 db::create -dbname file -fields [list id name readperm writeperm]
 
 set manrootuid [wa_uuid::gen user]
-db::set -dbname user -field uid $manrootuid -field user root -field flags [list root] -field pass "*LK*"
+db::set -dbname user -field uid $manrootuid -field user "tmpuser_[clock seconds]" -field flags [list root] -field pass "*LK*"
 user::setuid $manrootuid
 
 set rootuid [user::create -user $rootuser -name "Administrator" -flags root -pass $rootpass]
