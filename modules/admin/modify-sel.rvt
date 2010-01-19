@@ -15,7 +15,6 @@
     <tr>
       <td>Users:</td>
       <td>
-        <select name="modusers" size="5" multiple>
 <?
 	set modusers [list]
 	foreach userinfo [lsort -dictionary -index $sortidx [user::get -uid ALL -uids -user -name]] {
