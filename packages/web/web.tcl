@@ -211,5 +211,16 @@ namespace eval ::web {
 
 			puts -nonewline "<input type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
 		}
+
+		proc button {name {value ""}} {
+			if {$value == ""} {
+				set value $name
+			}
+
+			set name [::web::convert_html_entities $name]
+			set value [::web::convert_html_entities $value]
+
+			puts "<input type=\"submit\" name=\"$name\" value=\"$value\">"
+		}
 	}
 }
