@@ -222,5 +222,14 @@ namespace eval ::web {
 
 			puts "<input type=\"submit\" name=\"$name\" value=\"$value\">"
 		}
+
+		proc imgbutton {name imgname imgclass} {
+			set name [::web::convert_html_entities $name]
+
+			set image [::web::image $imgname "" $imgclass 1]
+
+			puts "<input type=\"image\" src=\"$image\" name=\"$name\">"
+		}
+
 	}
 }
