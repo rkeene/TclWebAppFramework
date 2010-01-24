@@ -483,7 +483,7 @@ namespace eval ::db {
 		debug::log db "mk::view info db.${dbname}"
 		::set fields [mk::view info db.${dbname}]
 		foreach field $fields {
-			set work [lindex [split $field :] 0]
+			::set work [lindex [split $field :] 0]
 			lappend ret $work
 		}
 
