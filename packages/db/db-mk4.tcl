@@ -243,6 +243,17 @@ namespace eval ::db {
 
 			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idx [lindex [mk::select db.${dbname} -exact $wherevar $whereval] 0]
+
+			if {$idx == ""} {
+				debug::log db "mk::row append db.${dbname}"
+				::set idx [mk::row append db.${dbname}]
+
+				debug::log db "mk::cursor position idx  (idx = $idx)"
+				::set idx [mk::cursor position idx]
+
+				debug::log db [list mk::set db.${dbname}!${idx} $wherevar $whereval]
+				mk::set db.${dbname}!${idx} $wherevar $whereval
+			}
 		} else {
 			debug::log db "mk::select db.__unique_fields -exact database $dbname"
 			::set uniquefieldsidx [mk::select db.__unique_fields -exact database $dbname]
@@ -279,6 +290,10 @@ namespace eval ::db {
 			}
 
 			if {![info exists idx]} {
+				::set idx ""
+			}
+
+			if {$idx == ""} {
 				debug::log db "mk::row append db.${dbname}"
 				::set idx [mk::row append db.${dbname}]
 
