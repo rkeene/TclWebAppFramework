@@ -156,7 +156,7 @@ namespace eval ::web {
 			set name [::web::convert_html_entities $name]
 			set currval [::web::convert_html_entities $currval]
 
-			puts -nonewline "<input type=\"$type\" name=\"$name\" value=\"$currval\">"
+			puts -nonewline "<input class=\"widget_${type}\" id=\"$name\" type=\"$type\" name=\"$name\" value=\"$currval\">"
 		}
 
 		proc password {name {default ""}} {
@@ -168,10 +168,16 @@ namespace eval ::web {
 
 			set name [::web::convert_html_entities $name]
 
-			if {$multiple} {
-				puts "<select name=\"$name\" size=\"$size\" multiple>"
+			if {$size == 1} {
+				set type "listbox"
 			} else {
-				puts "<select name=\"$name\" size=\"$size\">"
+				set type "dropdown"
+			}
+
+			if {$multiple} {
+				puts "<select class=\"widget_${type}\" id=\"$name\" name=\"$name\" size=\"$size\" multiple>"
+			} else {
+				puts "<select class=\"widget_${type}\" id=\"$name\" name=\"$name\" size=\"$size\">"
 			}
 
 			foreach entry $entries {
@@ -209,7 +215,7 @@ namespace eval ::web {
 			set name [::web::convert_html_entities $name]
 			set checkedvalue [::web::convert_html_entities $checkedvalue]
 
-			puts -nonewline "<input type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
+			puts -nonewline "<input class=\"widget_checkbox\" id=\"$name\" type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
 		}
 
 		proc button {name {value ""}} {
@@ -220,15 +226,16 @@ namespace eval ::web {
 			set name [::web::convert_html_entities $name]
 			set value [::web::convert_html_entities $value]
 
-			puts "<input type=\"submit\" name=\"$name\" value=\"$value\">"
+			puts "<input class=\"widget_button\" id=\"$name\" type=\"submit\" name=\"$name\" value=\"$value\">"
 		}
 
-		proc imgbutton {name imgname imgclass} {
+		proc imgbutton {name imgname imgclass {descr ""}} {
 			set name [::web::convert_html_entities $name]
+			set descr [::web::convert_html_entities $descr]
 
 			set image [::web::image $imgname "" $imgclass 1]
 
-			puts "<input type=\"image\" src=\"$image\" name=\"$name\">"
+			puts "<input class=\"widget_imgbutton\" id=\"$name\" type=\"image\" src=\"$image\" name=\"$name\" alt=\"$descr\" title=\"$descr\">"
 		}
 
 	}
