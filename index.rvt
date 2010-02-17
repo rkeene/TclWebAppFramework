@@ -36,6 +36,7 @@ if {[catch {
 
 	load_response args
 	load_headers
+	load_env
 
 	if {[info exists args(module)]} {
 		set module $args(module)
