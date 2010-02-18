@@ -1,12 +1,14 @@
-set sessionid [cookie get sessionid]
-if {[info exists args(sessionid)]} {
-	set sessionid $args(sessionid)
-}
-if {$sessionid == ""} {
-	set sessionid [session::create]
-	cookie set sessionid $sessionid -minutes 720
-} else {
-	session::load $sessionid
+if {![info exists ::session::vars(sessionid)]} {
+	set sessionid [cookie get sessionid]
+	if {[info exists args(sessionid)]} {
+		set sessionid $args(sessionid)
+	}
+	if {$sessionid == ""} {
+		set sessionid [session::create]
+		cookie set sessionid $sessionid -minutes 720
+	} else {
+		session::load $sessionid
+	}
 }
 
 # Verify that the user and pass are correct if specified
