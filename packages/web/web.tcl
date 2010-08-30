@@ -218,7 +218,18 @@ namespace eval ::web {
 			puts -nonewline "<input class=\"widget_checkbox\" id=\"$name\" type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
 		}
 
-		proc button {name {value ""}} {
+		proc button args {
+			set useAjax 0
+			if {[lindex $args 0] == "-ajax"} {
+				set args [lrange $args 1 end]
+				set useAjax 1
+			}
+			if {[llength $args] != 1 && [llength $args] != 2} {
+				return -code error "wrong # args: should be \"button \[-ajax\] name ?value?\""
+			}
+			set name [lindex $args 0]
+			set value [lindex $args 1]
+
 			if {$value == ""} {
 				set value $name
 			}
@@ -226,10 +237,30 @@ namespace eval ::web {
 			set name [::web::convert_html_entities $name]
 			set value [::web::convert_html_entities $value]
 
-			puts "<input class=\"widget_button\" id=\"$name\" type=\"submit\" name=\"$name\" value=\"$value\">"
+			set ajaxpart ""
+			if {$useAjax} {
+				_createXMLHTTPObject
+
+				set ajaxpart ""
+			}
+
+			puts "<input class=\"widget_button\" id=\"$name\" type=\"submit\" name=\"$name\" value=\"$value\"${ajaxpart}>"
 		}
 
-		proc imgbutton {name imgname imgclass {descr ""}} {
+		proc imgbutton args {
+			set useAjax 0
+			if {[lindex $args 0] == "-ajax"} {
+				set args [lrange $args 1 end]
+				set useAjax 1
+			}
+			if {[llength $args] != 3 && [llength $args] != 4} {
+				return -code error "wrong # args: should be \"imgbutton \[-ajax\] name imgname imgclass ?descr?\""
+			}
+			set name [lindex $args 0]
+			set imgname [lindex $args 1]
+			set imgclass  [lindex $args 2]
+			set descr [lindex $args 3]
+
 			set name [::web::convert_html_entities $name]
 			set descr [::web::convert_html_entities $descr]
 
@@ -238,5 +269,51 @@ namespace eval ::web {
 			puts "<input class=\"widget_imgbutton\" id=\"$name\" type=\"image\" src=\"$image\" name=\"$name\" alt=\"$descr\" title=\"$descr\">"
 		}
 
+		proc _createXMLHTTPObject {} {
+			if {![info exists ::request::WebApp_XMLHTTPObjectCreated]} {
+				set ::request::WebApp_XMLHTTPObjectCreated 1
+				puts {
+<script type="text/javascript">
+<!--
+	function WebApp_sendEvent(url) {
+		var WebApp_xmlHttpObject = null;
+
+		// Try to get the right object for different browser
+		try {
+			// Firefox, Opera 8.0+, Safari
+			WebApp_xmlHttpObject = new XMLHttpRequest();
+		} catch (e) {
+			// Internet Explorer
+			try {
+				WebApp_xmlHttpObject = new ActiveXObject("Msxml2.XMLHTTP");
+			} catch (e) {
+				WebApp_xmlHttpObject = new ActiveXObject("Microsoft.XMLHTTP");
+			}
+		}
+
+		if (!WebApp_xmlHttpObject) {
+			return;
+		}
+
+		WebApp_xmlHttpObject.onreadystatechange = function() {
+			if (WebApp_xmlHttpObject.readyState != 4) {
+				return;
+			}
+
+			if (WebApp_xmlHttpObject.status != 200) {
+				return;
+			}
+
+			eval(WebApp_xmlHttpObject.responseText);
+		}
+
+		WebApp_xmlHttpObject.open("get", url);
+		WebApp_xmlHttpObject.send(null);
+	}
+-->
+</script>
+				}
+			}
+		}
 	}
 }
