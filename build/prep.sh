@@ -6,7 +6,6 @@
 	rm -f userguide.pdf webapp.pdf
 	lyx2pdf userguide.lyx
 	lyx2pdf webapp.lyx
-	rm -f userguide.lyx webapp.lyx
 )
 
 # Delete anything we may have stored in local
