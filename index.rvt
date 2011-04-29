@@ -18,6 +18,12 @@ if {[catch {
 		if {[file exists local/modules/autoload/onlyonce/dbconfig.tcl]} {
 			source local/modules/autoload/onlyonce/dbconfig.tcl
 		}
+		if {[file exists modules/load/onlyonce/dbconfig.tcl]} {
+			source modules/load/onlyonce/dbconfig.tcl
+		}
+		if {[file exists local/modules/load/onlyonce/dbconfig.tcl]} {
+			source local/modules/load/onlyonce/dbconfig.tcl
+		}
 		set ::done_onlyonce_dbconfig 1
 	}
 

@@ -38,11 +38,11 @@ package require user
 package require db
 package require module
 
-if {[file exists modules/autoload/onlyonce/dbconfig.tcl]} {
-	source modules/autoload/onlyonce/dbconfig.tcl
+if {[file exists modules/load/onlyonce/dbconfig.tcl]} {
+	source modules/load/onlyonce/dbconfig.tcl
 }
-if {[file exists local/modules/autoload/onlyonce/dbconfig.tcl]} {
-	source local/modules/autoload/onlyonce/dbconfig.tcl
+if {[file exists local/modules/load/onlyonce/dbconfig.tcl]} {
+	source local/modules/load/onlyonce/dbconfig.tcl
 }
 
 namespace eval config {}
@@ -64,8 +64,8 @@ if {$config::db(mode) == "mysql"} {
 	flush stdout
 	gets stdin config::db(dbname)
 
-	file mkdir "local/modules/autoload/onlyonce/"
-	set fd [open "local/modules/autoload/onlyonce/dbconfig.tcl" w]
+	file mkdir "local/modules/load/onlyonce/"
+	set fd [open "local/modules/load/onlyonce/dbconfig.tcl" w]
 	puts $fd "namespace eval ::config {"
 	puts $fd "	[list set db(user) $config::db(user)]"
 	puts $fd "	[list set db(pass) $config::db(pass)]"
@@ -79,8 +79,8 @@ if {$config::db(mode) == "mysql"} {
 	flush stdout
 	gets stdin config::db(filename)
 
-	file mkdir "local/modules/autoload/onlyonce/"
-	set fd [open "local/modules/autoload/onlyonce/dbconfig.tcl" w]
+	file mkdir "local/modules/load/onlyonce/"
+	set fd [open "local/modules/load/onlyonce/dbconfig.tcl" w]
 	puts $fd "namespace eval ::config {"
 	puts $fd "	[list set db(filename) $config::db(filename)]"
 	puts $fd "	[list set db(mode) mk4]"

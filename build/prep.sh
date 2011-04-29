@@ -10,10 +10,10 @@
 
 # Delete anything we may have stored in local
 rm -rf local
-mkdir -p local/modules/autoload local/static local/modules/autoload/onlyonce
+mkdir -p local/modules/load local/static local/modules/load/onlyonce
 
 # Create a dummy configuration.
-cat <<EOF >local/modules/autoload/onlyonce/siteconfig.tcl
+cat <<EOF >local/modules/load/onlyonce/siteconfig.tcl
 namespace eval ::config {
 	set db(unconfigured) 1
 }
