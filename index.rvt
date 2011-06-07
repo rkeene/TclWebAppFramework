@@ -123,14 +123,20 @@ if {[catch {
 		set newpage [module::call login "" ""]
 	}
 
-	foreach {headmod header} $::headers {
-		debug::log index.rvt "Displaying $header/$headmod"
-		display $header $headmod
+	if {![info exists args(_webapp_noheader)]} {
+		foreach {headmod header} $::headers {
+			debug::log index.rvt "Displaying $header/$headmod"
+			display $header $headmod
+		}
 	}
+
 	display $newpage $module
-	foreach {footmod footer} $::footers {
-		debug::log index.rvt "Displaying $footer/$footmod"
-		display $footer $footmod
+
+	if {![info exists args(_webapp_noheader)]} {
+		foreach {footmod footer} $::footers {
+			debug::log index.rvt "Displaying $footer/$footmod"
+			display $footer $footmod
+		}
 	}
 
 	set state TERM
