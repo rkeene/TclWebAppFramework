@@ -84,6 +84,23 @@ if {[catch {
 		}
 	}
 
+	# Convert image arguments into simple lists
+	foreach var [array names args] {
+		if {[string match "*.y" $var]} {
+			continue
+		}
+		if {[string match "*.x" $var]} {
+			set basevar [string range $var 0 end-2]
+			if {![info exists ::request::args($basevar.y)]} {
+				continue
+			}
+			set ::request::args($basevar) [list $::request::args($basevar.x) $::request::args($basevar.y)]
+			unset ::request::args($basevar.x) ::request::args($basevar.y)
+			set var "$basevar"
+		}
+	}
+
+	# Determine subaction
 	set subaction ""
 	foreach var [array names args] {
 		if {[string match "*.y" $var]} {
