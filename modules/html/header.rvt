@@ -13,5 +13,9 @@
 		}
 		puts {    </style>}
 	}
+
+	if {[info exists ::html::favicon]} {
+		puts "    <link rel=\"icon\" href=\"[web::icon $::html::favicon "" favicon 1]\"></link>"
+	}
 ?>  </head>
   <body>
