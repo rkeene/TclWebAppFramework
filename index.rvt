@@ -47,7 +47,11 @@ if {[catch {
 	if {[info exists args(module)]} {
 		set module $args(module)
 	} else {
-		set module main
+		if {[info exists ::defaultmodule]} {
+			set module $::defaultmodule
+		} else {
+			set module main
+		}
 	}
 
 	set state INIT
