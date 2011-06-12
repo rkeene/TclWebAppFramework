@@ -15,7 +15,11 @@
 	}
 
 	if {[info exists ::html::favicon]} {
-		puts "    <link rel=\"icon\" href=\"[web::icon $::html::favicon "" favicon 1]\"></link>"
+		set ::html::favicon_file [web::image $::html::favicon "" favicon 1]
+
+		if {$::html::favicon_file != ""} {
+			puts "    <link rel=\"icon\" href=\"[web::image $::html::favicon_file "" favicon 1]\"></link>"
+		}
 	}
 ?>  </head>
   <body>
