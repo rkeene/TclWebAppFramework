@@ -244,7 +244,7 @@ namespace eval ::web {
 				set ajaxpart ""
 			}
 
-			puts "<input class=\"widget_button\" id=\"$name\" type=\"submit\" name=\"$name\" value=\"$value\"${ajaxpart}>"
+			puts -nonewline "<input class=\"widget_button\" id=\"$name\" type=\"submit\" name=\"$name\" value=\"$value\"${ajaxpart}>"
 		}
 
 		proc imgbutton args {
@@ -266,7 +266,7 @@ namespace eval ::web {
 
 			set image [::web::image $imgname "" $imgclass 1]
 
-			puts "<input class=\"widget_imgbutton\" id=\"$name\" type=\"image\" src=\"$image\" name=\"$name\" alt=\"$descr\" title=\"$descr\">"
+			puts -nonewline "<input class=\"widget_imgbutton\" id=\"$name\" type=\"image\" src=\"$image\" name=\"$name\" alt=\"$descr\" title=\"$descr\">"
 		}
 
 		proc _createXMLHTTPObject {} {
