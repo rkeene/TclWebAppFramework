@@ -81,11 +81,14 @@ if {$config::db(mode) == "mysql"} {
 	puts -nonewline "DB Filename: "
 	flush stdout
 	gets stdin config::db(filename)
-	set config::db(filename) [file normalize $config::db(filename)]
 
-	puts -nonewline "\[RivetCGI\] Database relative to executable (y/N): "
-	flush stdout
-	gets stdin relative
+	if {[string index $config::db(filename) 0] != "/"} {
+		puts -nonewline "Database relative to index.rvt (Normal) or executable (Starkit) (y/N): "
+		flush stdout
+		gets stdin relative
+	} else {
+		set relative "n"
+	}
 
 
 	file mkdir "local/modules/load/onlyonce/"
@@ -93,8 +96,19 @@ if {$config::db(mode) == "mysql"} {
 	puts $fd "namespace eval ::config {"
 
 	if {[string tolower $relative] == "y"} {
-		puts $fd "	[list set db(filename) \[file join \[file dirname \[info nameofexecutable\]\] [file tail $config::db(filename)]\]]"
+		puts stderr " *** SECURITY WARNING ***"
+		puts stderr "Please ensure that the database file (\"$config::db(filename)\") is not"
+		puts stderr "accessible via HTTP (this usually does not affect RivetCGI)."
+		puts stderr " *** SECURITY WARNING ***"
+
+		puts $fd "	if {\[info exists ::starkit::topdir\]} {"
+		puts $fd "		set db(filename) \[file join \[file dirname \[file normalize \$::starkit::topdir\]\] [list $config::db(filename)]\]"
+		puts $fd "	} else {"
+		puts $fd "		set db(filename) \[file join \[file dirname \[info script\]\] [list $config::db(filename)]\]"
+		puts $fd "	}"
 	} else {
+		set config::db(filename) [file normalize $config::db(filename)]
+
 		puts $fd "	[list set db(filename) $config::db(filename)]"
 	}
 
