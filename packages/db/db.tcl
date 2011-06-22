@@ -9,7 +9,7 @@ if {![info exists ::db::mode]} {
 	if {[info exists ::config::db(server)]} {
 		set ::db::mode mysql
 	}
-	if {[info exists ::config::db(file)]} {
+	if {[info exists ::config::db(filename)]} {
 		set ::db::mode "mk4"
 	}
 }

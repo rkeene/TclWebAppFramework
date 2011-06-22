@@ -6,6 +6,10 @@ handler.rvt
 handler.rvt/*
 local
 local/*
+packages/db/test.mk4
+packages/db/test.mk4/*
+packages/db/test.sqlite
+packages/db/test.sqlite/*
 static/local
 static/local/*
 tmp

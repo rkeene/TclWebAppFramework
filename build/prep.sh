@@ -25,4 +25,7 @@ rm -f update.sh
 # Delete any directories named "work", they hold working documents
 find . -type d -name work -print0 | xargs -0 rm -rf
 
+# Delete test databases
+rm -f packages/db/test.{mk4,sqlite}
+
 exit 0

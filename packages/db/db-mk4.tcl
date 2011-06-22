@@ -390,7 +390,7 @@ namespace eval ::db {
 	#	-dbname name	Name of database to retrieve from.
 	#	-fields list	List of fields to return  -OR-
 	#	-field str	Field to return
-	#	-all		Boolean conditional to return all or just one.
+	#	?-all?		Boolean conditional to return all or just one.
 	#	?-where cond?	Conditions to decide where to read.
 	# Rets: The value of the variable
 	# Stat: In progress.
@@ -405,7 +405,7 @@ namespace eval ::db {
 			return -code error "error: You may only specify one of -field or -fields."
 		}
 		if {$dbnameidx == 0 || ($fieldsidx == 0 && $fieldidx == 0)} {
-			return -code error "error: You must specify -dbname and -fields."
+			return -code error "error: You must specify -dbname and -fields/-field."
 		}
 
 		if {$whereidx != 0} {
@@ -421,7 +421,7 @@ namespace eval ::db {
 			::set selmode "-list"
 		}
 		if {$fieldidx != 0} {
-			::set fields [lindex $args $fieldidx]
+			::set fields [list [lindex $args $fieldidx]]
 			::set selmode "-flatlist"
 		}
 
@@ -440,33 +440,47 @@ namespace eval ::db {
 			::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
 		} else {
 			debug::log db "mk::select db.${dbname}"
-			::set idxes [mk::select db.${dbname}"]
+			::set idxes [mk::select db.${dbname}]
 		}
+
+		if {!$allbool} {
+			::set idxes [lindex $idxes 0]
+		}
+
+		if {![info exists where]} {
+			::set selmode "-list"
+		}
+
+		debug::log db "   -> $idxes"
 
 		::set ret [list]
 		foreach idx $idxes {
 			if {$selmode == "-list"} {
-				::set tmplist [list]
+				::set tmplist_mode [list]
 			}
+
 			foreach field $fields {
 				debug::log db [list mk::get db.${dbname}!${idx} $field]
 				::set fieldval [mk::get db.${dbname}!${idx} $field]
 				switch -- $selmode {
 					"-list" {
-						lappend tmplist $fieldval
+						lappend tmplist_mode $fieldval
 					}
 					"-flatlist" {
 						lappend ret $fieldval
 					}
 				}
 			}
+
 			if {$selmode == "-list"} {
-				lappend ret $tmplist
+				lappend ret $tmplist_mode
 			}
 		}
 
 		if {!$allbool} {
-			::set ret [lindex $ret 0]
+			if {[info exists where]} {
+				::set ret [lindex $ret 0]
+			}
 		}
 
 		if {[info exists where]} {

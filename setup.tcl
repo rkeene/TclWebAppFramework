@@ -4,6 +4,35 @@ cd [file dirname [info script]]
 
 lappend auto_path packages
 
+puts -nonewline "Type of DB (mysql, mk4, sqlite): "
+flush stdout
+gets stdin dbtype
+namespace eval ::config {}
+switch -- [string trim [string tolower $dbtype]] {
+	"mysql" - "sql" - "" {
+		set config::db(mode) mysql
+	}
+	"mk4" {
+		set config::db(mode) mk4
+	}
+	"sqlite" {
+		set config::db(mode) sqlite
+	}
+}
+
+package require user
+package require db
+package require module
+
+if {[file exists modules/load/onlyonce/dbconfig.tcl]} {
+	source modules/load/onlyonce/dbconfig.tcl
+}
+if {[file exists local/modules/load/onlyonce/dbconfig.tcl]} {
+	source local/modules/load/onlyonce/dbconfig.tcl
+}
+
+namespace eval config {}
+
 set rootuser ""
 set rootpass ""
 while 1 {
@@ -20,32 +49,6 @@ while 1 {
 
 	puts stderr "Invalid!"
 }
-
-puts -nonewline "Type of DB (mysql, mk4): "
-flush stdout
-gets stdin dbtype
-namespace eval ::config {}
-switch -- [string trim [string tolower $dbtype]] {
-	"mysql" - "sql" - "" {
-		set config::db(mode) mysql
-	}
-	"mk4" {
-		set config::db(mode) mk4
-	}
-}
-
-package require user
-package require db
-package require module
-
-if {[file exists modules/load/onlyonce/dbconfig.tcl]} {
-	source modules/load/onlyonce/dbconfig.tcl
-}
-if {[file exists local/modules/load/onlyonce/dbconfig.tcl]} {
-	source local/modules/load/onlyonce/dbconfig.tcl
-}
-
-namespace eval config {}
 
 if {$config::db(mode) == "mysql"} {
 	puts -nonewline "DB Username: "
@@ -78,12 +81,24 @@ if {$config::db(mode) == "mysql"} {
 	puts -nonewline "DB Filename: "
 	flush stdout
 	gets stdin config::db(filename)
+	set config::db(filename) [file normalize $config::db(filename)]
+
+	puts -nonewline "\[RivetCGI\] Database relative to executable (y/N): "
+	flush stdout
+	gets stdin relative
+
 
 	file mkdir "local/modules/load/onlyonce/"
 	set fd [open "local/modules/load/onlyonce/dbconfig.tcl" w]
 	puts $fd "namespace eval ::config {"
-	puts $fd "	[list set db(filename) $config::db(filename)]"
-	puts $fd "	[list set db(mode) mk4]"
+
+	if {[string tolower $relative] == "y"} {
+		puts $fd "	[list set db(filename) \[file join \[file dirname \[info nameofexecutable\]\] [file tail $config::db(filename)]\]]"
+	} else {
+		puts $fd "	[list set db(filename) $config::db(filename)]"
+	}
+
+	puts $fd "	[list set db(mode) $config::db(mode)]"
 	puts $fd "}"
 	close $fd
 
