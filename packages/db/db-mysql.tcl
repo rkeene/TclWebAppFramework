@@ -422,10 +422,14 @@ namespace eval ::db {
 	# Name: ::db::fields
 	# Args: (dash method)
 	#	-dbname db	Database to list fields from
+	#       ?-types?        Include type information
 	# Rets: A list of fields in `db'
 	# Stat: Complete
 	proc fields args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
+		::set typesidx [expr [lsearch -exact $args "-types"] + 1]
+		::set types [expr {!!$typesidx}]
+
 		if {$dbnameidx == 0} {
 			return -code error "error: You must specify -dbname"
 		}
@@ -457,6 +461,21 @@ namespace eval ::db {
 				}
 				lappend ::db::keys($dbname) $field
 			}
+
+			if {$types} {
+				switch -- $keytype {
+					"PRI" {
+						append field ":pk"
+					}
+					"KEY" {
+						append field ":k"
+					}
+					"UNI" {
+						append field ":u"
+					}
+				}
+			}
+
 			lappend ret $field
 		}
 

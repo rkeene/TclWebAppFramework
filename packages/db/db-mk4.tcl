@@ -495,10 +495,14 @@ namespace eval ::db {
 	# Name: ::db::fields
 	# Args: (dash method)
 	#	-dbname db	Database to list fields from
+	#       ?-types?        Include type information
 	# Rets: A list of fields in `db'
 	# Stat: In progress.
 	proc fields args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
+		::set typesidx [expr [lsearch -exact $args "-types"] + 1]
+		::set types [expr {!!$typesidx}]
+
 		if {$dbnameidx == 0} {
 			return -code error "error: You must specify -dbname"
 		}
@@ -512,8 +516,12 @@ namespace eval ::db {
 		debug::log db "mk::view info db.${dbname}"
 		::set fields [mk::view info db.${dbname}]
 		foreach field $fields {
-			::set work [lindex [split $field :] 0]
-			lappend ret $work
+			if {$types} {
+				lappend ret $field
+			} else {
+				::set work [lindex [split $field :] 0]
+				lappend ret $work
+			}
 		}
 
 		return $ret

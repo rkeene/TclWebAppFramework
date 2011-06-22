@@ -96,7 +96,7 @@ namespace eval ::db {
 					::set havekey 1
 				}
 				"u" {
-					::set type($fieldname) "TEXT UNIQUE"
+					::set type($fieldname) "BLOB UNIQUE"
 				}
 				default {
 					::set type($fieldname) "BLOB"
@@ -398,18 +398,22 @@ namespace eval ::db {
 	# Name: ::db::fields
 	# Args: (dash method)
 	#	-dbname db	Database to list fields from
+	#       ?-types?        Include type information
 	# Rets: A list of fields in `db'
 	# Stat: In progress
 	proc fields args {
 		::set dbnameidx [expr [lsearch -exact $args "-dbname"] + 1]
+		::set typesidx [expr [lsearch -exact $args "-types"] + 1]
+		::set types [expr {!!$typesidx}]
+
 		if {$dbnameidx == 0} {
 			return -code error "error: You must specify -dbname"
 		}
 
 		::set dbname [lindex $args $dbnameidx]
 
-		if {[info exists ::db::cachefields($dbname)]} {
-			return $::db::cachefields($dbname)
+		if {[info exists ::db::cachefields([list $dbname $types])]} {
+			return $::db::cachefields([list $dbname $types])
 		}
 
 		::set ret [list]
@@ -439,10 +443,25 @@ namespace eval ::db {
 
 			::set fieldname [lindex $field 0]
 
+			if {$types} {
+				::set fieldtype [string toupper [join [lrange $field 1 end]]]
+				switch -- $fieldtype {
+					"TEXT PRIMARY KEY" {
+						append fieldname ":pk"
+					}
+					"TEXT UNIQUE" {
+						append fieldname ":k"
+					}
+					"BLOB UNIQUE" {
+						append fieldname ":u"
+					}
+				}
+			}
+
 			lappend ret $fieldname
 		}
 
-		::set ::db::cachefields($dbname) $ret
+		::set ::db::cachefields([list $dbname $types]) $ret
 
 		return $ret
 	}
