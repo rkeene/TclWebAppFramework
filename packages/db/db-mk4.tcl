@@ -125,6 +125,7 @@ namespace eval ::db {
 			return -code error "error: You must specify atleast one field."
 		}
 
+		::set internalfields [list]
 		foreach field $fields {
 			::set fieldwork [split $field :]
 			::set fieldname [lindex $fieldwork 0]
@@ -133,13 +134,21 @@ namespace eval ::db {
 				"pk" {
 					::set type($fieldname) "S"
 					lappend uniquefields $fieldname
+					lappend internalfields $fieldname:$fieldinfo
 				}
 				"k" {
 					::set type($fieldname) "S"
 					lappend uniquefields $fieldname
+					lappend internalfields $fieldname:$fieldinfo
+				}
+				"u" {
+					::set type($fieldname) "S"
+					lappend uniquefields $fieldname
+					lappend internalfields $fieldname:$fieldinfo
 				}
 				default {
 					::set type($fieldname) "B"
+					lappend internalfields $fieldname
 				}
 			}
 
@@ -171,6 +180,12 @@ namespace eval ::db {
 			mk::view layout db.__unique_fields [list database:S fields:S]
 		}
 
+		if {[mk::view info db.__fields] == ""} {
+			debug::log db [list mk::view layout db.__fields [list database:S fields:S]]
+			mk::view layout db.__fields [list database:S fields:S]
+		}
+
+		# Create list of fields which must have unique values
 		::set chkidx [mk::select db.__unique_fields -exact database $dbname]
 		if {$chkidx != ""} {
 			::set chkidx [lindex $chkidx 0]
@@ -185,6 +200,22 @@ namespace eval ::db {
 		debug::log db [list mk::set $cursor database $dbname fields $uniquefields]
 		mk::set $cursor database $dbname fields $uniquefields
 
+		# Create list of fields used to create this database
+		::set chkidx [mk::select db.__fields -exact database $dbname]
+		if {$chkidx != ""} {
+			::set chkidx [lindex $chkidx 0]
+
+			::set cursor "db.__fields!${chkidx}"
+			debug::log db "Database already found, updating fields: $cursor"
+		} else {
+			debug::log db "mk::row append db.__fields"
+			::set cursor [mk::row append db.__fields]
+		}
+
+		debug::log db [list mk::set $cursor database $dbname fields $internalfields]
+		mk::set $cursor database $dbname fields $internalfields
+
+		# Create database
 		debug::log db [list mk::view layout db.${dbname} $fieldlist]
 		mk::view layout db.${dbname} $fieldlist
 
@@ -478,7 +509,7 @@ namespace eval ::db {
 		}
 
 		if {!$allbool} {
-			if {[info exists where]} {
+			if {[info exists where] || ([llength $fields] == 1 && $fieldsidx == 0)} {
 				::set ret [lindex $ret 0]
 			}
 		}
@@ -509,16 +540,27 @@ namespace eval ::db {
 
 		::set dbname [lindex $args $dbnameidx]
 
-		::set ret ""
+		::set ret [list]
 
 		::set dbhandle [connect]
 
-		debug::log db "mk::view info db.${dbname}"
-		::set fields [mk::view info db.${dbname}]
-		foreach field $fields {
-			if {$types} {
-				lappend ret $field
-			} else {
+		if {$types} {
+			::set chkidx [mk::select db.__fields -exact database $dbname]
+			if {$chkidx != ""} {
+				::set chkidx [lindex $chkidx 0]
+
+				::set cursor "db.__fields!${chkidx}"
+
+				::set fields [mk::get $cursor fields]
+
+				::set ret $fields
+			}
+		} else {
+			debug::log db "mk::view info db.${dbname}"
+
+			::set fields [mk::view info db.${dbname}]
+
+			foreach field $fields {
 				::set work [lindex [split $field :] 0]
 				lappend ret $work
 			}

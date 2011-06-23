@@ -381,7 +381,7 @@ namespace eval ::db {
 		}
 
 		if {!$allbool} {
-			if {[info exists where]} {
+			if {[info exists where] || ([llength $fields] == 1 && $fieldsidx == 0)} {
 				::set ret [lindex $ret 0]
 			}
 		}
