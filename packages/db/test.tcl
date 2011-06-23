@@ -10,7 +10,7 @@ namespace eval ::config {}
 if {[llength $argv] < 1} {
 	puts stderr "Usage: test.tcl <driver>"
 	puts stderr "Where driver is one of:"
-	puts stderr "    mysql"
+	puts stderr "    mysql:<user>:<server>:<password>"
 	puts stderr "    mk4"
 	puts stderr "    sqlite"
 
