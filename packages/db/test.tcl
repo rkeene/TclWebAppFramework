@@ -7,6 +7,16 @@ lappend auto_path [file join [file dirname [info script]] ..]
 namespace eval ::db {}
 namespace eval ::config {}
 
+if {[llength $argv] < 1} {
+	puts stderr "Usage: test.tcl <driver>"
+	puts stderr "Where driver is one of:"
+	puts stderr "    mysql"
+	puts stderr "    mk4"
+	puts stderr "    sqlite"
+
+	exit 1
+}
+
 set ::db::mode [lindex $argv 0]
 set argv [lrange $argv 1 end]
 
