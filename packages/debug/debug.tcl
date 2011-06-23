@@ -14,6 +14,9 @@ namespace eval debug {
 			}
 
 			set usec [lindex [split [expr [format "%u" [clock clicks]].0 / 1000000.0] .] 1]
+
+			append usec [string repeat "0" [expr {6 - [string length $usec]}]]
+
 			puts $logfd "[clock seconds].$usec \[[pid]\]: \[$src\] => $msg"
 
 			if {$logfile != "stderr"} {
