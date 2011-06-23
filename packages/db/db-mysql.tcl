@@ -115,6 +115,9 @@ namespace eval ::db {
 					::set type($fieldname) "VARCHAR(255) KEY"
 					::set havekey 1
 				}
+				"u" {
+					::set type($fieldname) "VARCHAR(255) UNIQUE"
+				}
 				default {
 					::set type($fieldname) "LONGBLOB"
 				}
@@ -398,16 +401,18 @@ namespace eval ::db {
 		} else {
 			debug::log db "SELECT $fieldstr FROM $dbname;"
 			if {[catch {
-				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" $selmode]
+				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" "-list"]
 			}]} {
 				disconnect
 				::set dbhandle [connect]
-				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" $selmode]
+				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" "-list"]
 			}
 		}
 
 		if {!$allbool} {
-			::set ret [lindex $ret 0]
+			if {[info exists where] || ([llength $fields] == 1 && $fieldsidx == 0)} {
+				::set ret [lindex $ret 0]
+			}
 		}
 
 		if {[info exists where]} {
@@ -452,7 +457,25 @@ namespace eval ::db {
 
 		foreach line $dbdesc {
 			::set field [lindex $line 0]
+			::set fieldfq $field
 			::set keytype [string toupper [lindex $line 3]]
+
+			if {$types} {
+				switch -- $keytype {
+					"PRI" {
+						append fieldfq ":pk"
+					}
+					"KEY" {
+						append fieldfq ":k"
+					}
+					"UNI" {
+						append fieldfq ":u"
+					}
+				}
+			}
+
+			lappend ret $fieldfq
+
 			if {$keytype == "PRI" || $keytype == "UNI" || $keytype == "KEY"} {
 				if {[info exists ::db::keys($dbname)]} {
 					if {[lsearch -exact $::db::keys($dbname) $field] != -1} {
@@ -461,22 +484,6 @@ namespace eval ::db {
 				}
 				lappend ::db::keys($dbname) $field
 			}
-
-			if {$types} {
-				switch -- $keytype {
-					"PRI" {
-						append field ":pk"
-					}
-					"KEY" {
-						append field ":k"
-					}
-					"UNI" {
-						append field ":u"
-					}
-				}
-			}
-
-			lappend ret $field
 		}
 
 		return $ret

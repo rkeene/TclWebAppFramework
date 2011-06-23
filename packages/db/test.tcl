@@ -17,12 +17,18 @@ if {[llength $argv] < 1} {
 	exit 1
 }
 
-set ::db::mode [lindex $argv 0]
+set dbopts [split [lindex $argv 0] :]
+set ::db::mode [lindex $dbopts 0]
+
 set argv [lrange $argv 1 end]
 
 switch -- $::db::mode {
 	"mysql" {
-		error "Not implemented"
+		set ::config::db(user) [lindex $dbopts 1]
+		set ::config::db(pass) [lindex $dbopts 3]
+		set ::config::db(server) [lindex $dbopts 2]
+		set ::config::db(dbname) [lindex $dbopts 1]
+		set ::config::db(mode) mysql
 	}
 	"mk4" {
 		set ::config::db(filename) "test.mk4"
@@ -39,7 +45,7 @@ switch -- $::db::mode {
 package require db
 package require debug
 
-debug::logfile "-"
+debug::logfile ""
 
 db::create -dbname test -fields [list joe:pk bob:u sally]
 
@@ -119,7 +125,7 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 ::tcltest::test db-3.0 "Return entire DB" -body {
 	db::set -dbname test -field joe 32 -field sally 2
 	db::set -dbname test -field joe 33 -field sally "White as Snow"
-	return [db::get -all -dbname test -fields [list joe sally]]
+	return [lsort -integer -increasing -index 0 [db::get -all -dbname test -fields [list joe sally]]]
 } -cleanup {
 	db::unset -dbname test -where "joe=32"
 	db::unset -dbname test -where "joe=33"
@@ -134,3 +140,9 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 } -result [list joe:pk bob:u sally]
 
 file delete -force -- test.mk4 test.sqlite
+
+if {$::tcltest::numTests(Failed) != "0"} {
+	exit 1
+}
+
+::tcltest::cleanupTests

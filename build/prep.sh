@@ -1,4 +1,4 @@
-#! /bin/sh
+#! /bin/bash
 
 # Generate the documentation
 (
@@ -26,7 +26,17 @@ rm -f update.sh
 find . -type d -name work -print0 | xargs -0 rm -rf
 find . -type f -name .cvsignore -print0 | xargs -0 rm -rf
 
+# Test databases for sanity
+(
+	cd packages/db || exit 1
+
+	"./do-tests.sh" || exit 1
+
+	exit 0
+) || exit 1
+
 # Delete test databases
 rm -f packages/db/test.{mk4,sqlite}
+rm -f packages/db/do-tests.sh
 
 exit 0
