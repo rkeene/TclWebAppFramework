@@ -86,12 +86,19 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	db::unset -dbname test -where "joe=33"
 } -result "White as Snow"
 
-::tcltest::test db-1.3 "Return multiple fields" -body {
+::tcltest::test db-1.3.0 "Return multiple fields using \"-fields\"" -body {
 	db::set -dbname test -field joe 33 -field sally "White as Snow"
 	return [db::get -dbname test -fields [list sally] -where "joe=33"]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
 } -result [list "White as Snow"]
+
+::tcltest::test db-1.3.1 "Return multiple fields using \"-field\"" -constraints [list knownBug] -body {
+	db::set -dbname test -field joe 33 -field sally "White as Snow"
+	return [db::get -dbname test -field sally -field joe -where "joe=33"]
+} -cleanup {
+	db::unset -dbname test -where "joe=33"
+} -result [list "White as Snow" "33"]
 
 ::tcltest::test db-1.4 "Return multiple rows" -body {
 	db::set -dbname test -field joe 33 -field sally "White as Snow"
