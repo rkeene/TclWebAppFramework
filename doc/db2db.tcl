@@ -90,7 +90,7 @@ foreach table $tables {
 	set fields [$indb eval [list db::fields -dbname $table]]
 
 	### Copy every row
-	set data [$indb eval [list db::get -dbname $table -fields $fields]]
+	set data [$indb eval [list db::get -all -dbname $table -fields $fields]]
 
 	foreach row $data {
 		set fields_cmd [list]
