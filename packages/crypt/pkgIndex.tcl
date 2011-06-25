@@ -9,4 +9,4 @@
 # full path name of this file's directory.
 
 if {![package vsatisfies [package provide Tcl] 8.4]} {return}
-package ifneeded crypt 1.0 [list source [file join $dir crypt.tcl]]
+package ifneeded crypt 1.1 [list source [file join $dir crypt.tcl]]
