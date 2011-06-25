@@ -1,9 +1,18 @@
 package require Tcl 8.4
 
-package provide crypt 1.0
+package require sha1 2
+package require base64
+package provide crypt 1.1
+
+namespace eval ::crypt {}
+
+# For compatibility
+proc crypt {password {salt ""}} {
+	::crypt::unixcrypt $password $salt
+}
 
 # From http://wiki.tcl.tk/1070
-proc crypt {password {salt ""}} {
+proc ::crypt::unixcrypt {password {salt ""}} {
     if {$salt == ""} {
         set saltstr "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
         set salta [expr [clock clicks] % [string length $saltstr]]
@@ -278,3 +287,65 @@ proc crypt {password {salt ""}} {
 
     return $encrypted
 }
+
+proc ::crypt::ssha {plaintext {salt ""}} {
+	if {$salt == ""} {
+		# Generate 32-bit salt
+		expr {srand([clock clicks])}
+		set salt1 [expr {int(rand() * 65536)}]
+		set salt2 [expr {int(rand() * 65536)}]
+
+		set salt1a [expr {$salt1 >> 8}]
+		set salt1b [expr {$salt1 & 255}]
+		set salt2a [expr {$salt2 >> 8}]
+		set salt2b [expr {$salt2 & 255}]
+
+		set salt [format "%c%c%c%c" $salt1a $salt1b $salt2a $salt2b]
+	}
+
+	set hash [sha1::sha1 -bin "${plaintext}${salt}"]
+	set hash [base64::encode -wrapchar "" "${hash}${salt}"]
+	set hash "{SSHA}${hash}"
+
+	return $hash
+}
+
+proc ::crypt::crypt {plaintext} {
+	return [::crypt::ssha $plaintext]
+}
+
+proc ::crypt::compare {plaintext hash} {
+	# Old UNIX crypt
+	if {[string length $hash] == "13"} {
+		set salt [string range $hash 0 1]
+
+		set chk_hash [::crypt::unixcrypt $plaintext $salt]
+
+		if {$chk_hash == $hash} {
+			return 1
+		}
+
+		return 0
+	}
+
+	# Salted SHA (SSHA)
+	if {[string match "{SSHA}*" $hash]} {
+		set hash_noheader [string range $hash 6 end]
+
+		set hash_bin [base64::decode $hash_noheader]
+		set hash_binlen [string length $hash_bin]
+		set saltlen [expr {$hash_binlen - 20 - 1}]
+		set salt [string range $hash_bin end-${saltlen} end]
+
+		set chk_hash [::crypt::ssha $plaintext $salt]
+
+		if {$chk_hash == $hash} {
+			return 1
+		}
+
+		return 0
+	}
+
+	return 0
+}
+

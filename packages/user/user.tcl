@@ -71,12 +71,10 @@ namespace eval user {
 
 		hook::call user::login $uid $pass $from
 
-		set realpass [get -uid $uid -pass]
-		set realsalt [string range $realpass 0 1]
-		set chkpass [crypt $pass $realsalt]
+		set hash [get -uid $uid -pass]
 
-		if {$chkpass != $realpass} {
-			debug::log user::login "Failed password ($chkpass != $realpass)"
+		if {[::crypt::compare $pass $hash]} {
+			debug::log user::login "Failed password"
 
 			set retval 0
 
@@ -148,7 +146,7 @@ namespace eval user {
 			if {$passplain == ""} {
 				set pass "*LK*"
 			} else {
-				set pass [crypt $passplain]
+				set pass [::crypt::crypt $passplain]
 			}
 		} else {
 			set pass "*LK*"
@@ -299,7 +297,7 @@ namespace eval user {
 			if {$passplain == ""} {
 				set pass "*LK*"
 			} else {
-				set pass [crypt $passplain]
+				set pass [::crypt::crypt $passplain]
 			}
 			set check [db::set -dbname user -field pass $pass -where uid=$uid]
 			if {!$check} {
