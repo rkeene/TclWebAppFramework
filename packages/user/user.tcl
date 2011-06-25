@@ -73,7 +73,7 @@ namespace eval user {
 
 		set hash [get -uid $uid -pass]
 
-		if {[::crypt::compare $pass $hash]} {
+		if {![::crypt::compare $pass $hash]} {
 			debug::log user::login "Failed password"
 
 			set retval 0
