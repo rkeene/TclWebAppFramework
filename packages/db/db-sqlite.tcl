@@ -14,14 +14,23 @@ namespace eval ::db {
 	proc _tryeval {args} {
 		::set dbhandle [connect]
 
+		::set disconnectOnError 1
+		if {[lindex $args 0] == "-nodisconnect"} {
+			::set args [lrange $args 1 end]
+
+			::set disconnectOnError 0
+		}
+
 		for {::set retry 0} {$retry < 30} {incr retry} {
 			if {[catch {
 				::set cmd [linsert $args 0 $dbhandle eval]
 				::set retval [uplevel 1 $cmd]
 			} err]} {
-				disconnect
+				if {$disconnectOnError} {
+					disconnect
 
-				::set dbhandle [connect]
+					::set dbhandle [connect]
+				}
 
 				after [expr {($retry / 10) * 1000}]
 
@@ -47,6 +56,8 @@ namespace eval ::db {
 		}
 
 		hook::call db::disconnect::enter
+
+		_tryeval -nodisconnect "END TRANSACTION;"
 
 		catch {
 			$::db::CACHEDBHandle close
@@ -84,6 +95,16 @@ namespace eval ::db {
 		if {![info exists ::db::CACHEDBHandle]} {
 			return -code error "error: Could not connect to SQL Server: $connectError"
 		}
+
+		after idle {
+			db::disconnect
+		}
+
+		catch {
+			$::db::CACHEDBHandle eval "PRAGMA journal_mode=WAL;"
+		}
+
+		_tryeval -nodisconnect "BEGIN TRANSACTION;"
 
 		hook::call db::connect::return $::db::CACHEDBHandle
 

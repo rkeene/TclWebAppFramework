@@ -146,7 +146,33 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::fields -types -dbname test]
 } -result [list joe:pk bob:u sally]
 
-file delete -force -- test.mk4 test.sqlite
+::tcltest::test db-5.0 "Explicit Disconnect" -body {
+	db::set -dbname test -field joe 32 -field sally 2
+
+	db::disconnect
+
+	db::set -dbname test -field joe 33 -field sally "White as Snow"
+
+	return [lsort -integer -increasing -index 0 [db::get -all -dbname test -fields [list joe sally]]]
+} -cleanup {
+	db::unset -dbname test -where "joe=32"
+	db::unset -dbname test -where "joe=33"
+} -result [list [list 32 2] [list 33 "White as Snow"]]
+
+::tcltest::test db-5.1 "Implicit Disconnect" -body {
+	db::set -dbname test -field joe 32 -field sally 2
+
+	update
+
+	db::set -dbname test -field joe 33 -field sally "White as Snow"
+
+	return [lsort -integer -increasing -index 0 [db::get -all -dbname test -fields [list joe sally]]]
+} -cleanup {
+	db::unset -dbname test -where "joe=32"
+	db::unset -dbname test -where "joe=33"
+} -result [list [list 32 2] [list 33 "White as Snow"]]
+
+file delete -force -- test.mk4 test.sqlite test.sqlite-journal test.sqlite-shm test.sqlite-wal
 
 if {$::tcltest::numTests(Failed) != "0"} {
 	exit 1

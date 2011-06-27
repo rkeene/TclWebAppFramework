@@ -9,6 +9,12 @@ local/*
 packages/db/test.mk4
 packages/db/test.mk4/*
 packages/db/test.sqlite
+packages/db/test.sqlite-journal
+packages/db/test.sqlite-journal/*
+packages/db/test.sqlite-shm
+packages/db/test.sqlite-shm/*
+packages/db/test.sqlite-wal
+packages/db/test.sqlite-wal/*
 packages/db/test.sqlite/*
 static/local
 static/local/*
