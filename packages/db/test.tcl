@@ -45,18 +45,22 @@ switch -- $::db::mode {
 package require db
 package require debug
 
-debug::logfile ""
+debug::logfile "-"
 
 db::create -dbname test -fields [list joe:pk bob:u sally]
 
 ::tcltest::test db-0.0 "Empty db" -body {
 	return [db::get -dbname test -field sally -where "joe=33"]
+} -cleanup {
+	db::disconnect
 } -result ""
 
 ::tcltest::test db-0.1 "Unset" -body {
 	db::set -dbname test -field joe 33 -field sally "Little Lamb"
 	db::unset -dbname test -where "joe=33"
 	return [db::get -dbname test -field sally -where "joe=33"]
+} -cleanup {
+	db::disconnect
 } -result ""
 
 ::tcltest::test db-0.2 "Unset a single field" -body {
@@ -65,6 +69,8 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -field sally -where "joe=32"]
 } -cleanup {
 	db::unset -dbname test -where "joe=32"
+
+	db::disconnect
 } -result ""
 
 ::tcltest::test db-1.0 "???" -body {
@@ -76,6 +82,8 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -field sally -where "joe=33"]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+
+	db::disconnect
 } -result "Little Lamb"
 
 ::tcltest::test db-1.2 "Replacement set" -body {
@@ -84,6 +92,8 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -field sally -where "joe=33"]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+
+	db::disconnect
 } -result "White as Snow"
 
 ::tcltest::test db-1.3.0 "Return multiple fields using \"-fields\"" -body {
@@ -91,6 +101,8 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -fields [list sally] -where "joe=33"]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+
+	db::disconnect
 } -result [list "White as Snow"]
 
 ::tcltest::test db-1.3.1 "Return multiple fields using \"-field\"" -constraints [list knownBug] -body {
@@ -98,6 +110,7 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -field sally -field joe -where "joe=33"]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+	db::disconnect
 } -result [list "White as Snow" "33"]
 
 ::tcltest::test db-1.4 "Return multiple rows" -body {
@@ -105,6 +118,7 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -field sally]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+	db::disconnect
 } -result [list "White as Snow"]
 
 ::tcltest::test db-1.5 "Return multiple fields and multiple rows" -body {
@@ -112,6 +126,7 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -fields [list sally]]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+	db::disconnect
 } -result [list [list "White as Snow"]]
 
 ::tcltest::test db-1.6 "Return multiple fields (really) and multiple rows" -body {
@@ -119,6 +134,7 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -fields [list joe sally]]
 } -cleanup {
 	db::unset -dbname test -where "joe=33"
+	db::disconnect
 } -result [list [list "33" "White as Snow"]]
 
 ::tcltest::test db-2.0 "Implicit replacement" -body {
@@ -127,6 +143,7 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 	return [db::get -dbname test -field sally -where "joe=32"]
 } -cleanup {
 	db::unset -dbname test -where "joe=32"
+	db::disconnect
 } -result "2"
 
 ::tcltest::test db-3.0 "Return entire DB" -body {
@@ -136,14 +153,19 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 } -cleanup {
 	db::unset -dbname test -where "joe=32"
 	db::unset -dbname test -where "joe=33"
+	db::disconnect
 } -result [list [list 32 2] [list 33 "White as Snow"]]
 
 ::tcltest::test db-4.0 "Return fields" -body {
 	return [db::fields -dbname test]
+} -cleanup {
+	db::disconnect
 } -result [list joe bob sally]
 
 ::tcltest::test db-4.1 "Return fields with types" -body {
 	return [db::fields -types -dbname test]
+} -cleanup {
+	db::disconnect
 } -result [list joe:pk bob:u sally]
 
 ::tcltest::test db-5.0 "Explicit Disconnect" -body {
@@ -157,6 +179,8 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 } -cleanup {
 	db::unset -dbname test -where "joe=32"
 	db::unset -dbname test -where "joe=33"
+
+	db::disconnect
 } -result [list [list 32 2] [list 33 "White as Snow"]]
 
 ::tcltest::test db-5.1 "Implicit Disconnect" -body {
@@ -170,6 +194,8 @@ db::create -dbname test -fields [list joe:pk bob:u sally]
 } -cleanup {
 	db::unset -dbname test -where "joe=32"
 	db::unset -dbname test -where "joe=33"
+
+	db::disconnect
 } -result [list [list 32 2] [list 33 "White as Snow"]]
 
 file delete -force -- test.mk4 test.sqlite test.sqlite-journal test.sqlite-shm test.sqlite-wal

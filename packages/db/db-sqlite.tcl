@@ -21,7 +21,15 @@ namespace eval ::db {
 			::set disconnectOnError 0
 		}
 
+		::set sql [lindex $args 0]
+
 		for {::set retry 0} {$retry < 30} {incr retry} {
+			if {$retry == "0"} {
+				debug::log db "$sql"
+			} else {
+				debug::log db "(try $retry) $sql"
+			}
+
 			if {[catch {
 				::set cmd [linsert $args 0 $dbhandle eval]
 				::set retval [uplevel 1 $cmd]
@@ -167,8 +175,6 @@ namespace eval ::db {
 
 		::set sqlstr "CREATE TABLE IF NOT EXISTS main.$dbname ([join $fieldlist {, }]);"
 
-		debug::log db $sqlstr
-
 		_tryeval $sqlstr
 
 		hook::call db::create::return 1 $dbname $newfields
@@ -232,8 +238,6 @@ namespace eval ::db {
 			::set sqlstr "INSERT OR REPLACE INTO main.$dbname ([join $fieldnames {, }]) VALUES ([join $fieldvalues {, }]);"
 		}
 
-		debug::log db $sqlstr
-
 		_tryeval $sqlstr
 
 		::set ret 1
@@ -290,8 +294,6 @@ namespace eval ::db {
 		} else {
 			::set sqlstr "DELETE FROM main.$dbname WHERE $wherevar = :whereval"
 		}
-
-		debug::log db $sqlstr
 
 		_tryeval $sqlstr
 
@@ -377,8 +379,6 @@ namespace eval ::db {
 			::set selmode "-list"
 		}
 
-		debug::log db $sqlstr
-
 		::set ret [list]
 
 		_tryeval $sqlstr row {
@@ -442,8 +442,6 @@ namespace eval ::db {
 		::set ret [list]
 
 		::set sqlstr "SELECT sql FROM sqlite_master WHERE name = :dbname AND type = 'table';"
-
-		debug::log db $sqlstr
 
 		::set dbdesc [_tryeval $sqlstr]
 
