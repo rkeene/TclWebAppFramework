@@ -6,6 +6,34 @@ package require debug
 package require wa_uuid
 
 namespace eval ::db {
+	# Name: ::db::_tryeval
+	# Args:
+	#       args...      Passed to SQLite3's eval command
+	# Rets: Return value from evaluation
+	# Stat: In progress
+	proc _tryeval {args} {
+		::set dbhandle [connect]
+
+		for {::set retry 0} {$retry < 30} {incr retry} {
+			if {[catch {
+				::set cmd [linsert $args 0 $dbhandle eval]
+				::set retval [uplevel 1 $cmd]
+			} err]} {
+				disconnect
+
+				::set dbhandle [connect]
+
+				after [expr {($retry / 10) * 1000}]
+
+				continue
+			}
+
+			return $retval
+		}
+
+		return -code error $err
+	}
+
 	# Name: ::db::disconnect
 	# Args: (none)
 	# Rets: 1 on success, 0 otherwise.
@@ -116,19 +144,11 @@ namespace eval ::db {
 
 		hook::call db::create::enter $dbname $newfields
 
-		::set dbhandle [connect]
-
 		::set sqlstr "CREATE TABLE IF NOT EXISTS main.$dbname ([join $fieldlist {, }]);"
 
 		debug::log db $sqlstr
 
-		if {[catch {
-			$dbhandle eval $sqlstr
-		}]} {
-			disconnect
-			::set dbhandle [connect]
-			$dbhandle eval $sqlstr
-		}
+		_tryeval $sqlstr
 
 		hook::call db::create::return 1 $dbname $newfields
 
@@ -174,8 +194,6 @@ namespace eval ::db {
 			hook::call db::set::enter $dbname $fielddata
 		}
 
-		::set dbhandle [connect]
-
 		::set ret 0
 
 		if {[info exists where]} {
@@ -195,13 +213,7 @@ namespace eval ::db {
 
 		debug::log db $sqlstr
 
-		if {[catch {
-			$dbhandle eval $sqlstr
-		}]} {
-			disconnect
-			::set dbhandle [connect]
-			$dbhandle eval $sqlstr
-		}
+		_tryeval $sqlstr
 
 		::set ret 1
 
@@ -248,8 +260,6 @@ namespace eval ::db {
 			hook::call db::unset::enter $dbname $where
 		}
 
-		::set dbhandle [connect]
-
 		if {[info exists fields]} {
 			foreach field $fields {
 				lappend fieldassignlist "$field = :NULL"
@@ -262,13 +272,7 @@ namespace eval ::db {
 
 		debug::log db $sqlstr
 
-		if {[catch {
-			$dbhandle eval $sqlstr
-		}]} {
-			disconnect
-			::set dbhandle [connect]
-			$dbhandle eval $sqlstr
-		}
+		_tryeval $sqlstr
 
 		::set ret 1
 
@@ -336,8 +340,6 @@ namespace eval ::db {
 			hook::call db::get::enter $dbname $fields $allbool
 		}
 
-		::set dbhandle [connect]
-
 		if {[info exists where]} {
 			if {$allbool} {
 				::set sqlstr "SELECT $fieldstr FROM main.$dbname WHERE $wherevar = :whereval;"
@@ -358,7 +360,7 @@ namespace eval ::db {
 
 		::set ret [list]
 
-		$dbhandle eval $sqlstr row {
+		_tryeval $sqlstr row {
 			if {$selmode == "-list"} {
 				::set tmplist_mode [list]
 			}
@@ -418,19 +420,11 @@ namespace eval ::db {
 
 		::set ret [list]
 
-		::set dbhandle [connect]
-
 		::set sqlstr "SELECT sql FROM sqlite_master WHERE name = :dbname AND type = 'table';"
 
 		debug::log db $sqlstr
 
-		if {[catch {
-			::set dbdesc [$dbhandle eval $sqlstr]
-		}]} {
-			disconnect
-			::set dbhandle [connect]
-			::set dbdesc [$dbhandle eval $sqlstr]
-		}
+		::set dbdesc [_tryeval $sqlstr]
 
 		::set dbdesc [lindex $dbdesc 0]
 
