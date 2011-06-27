@@ -19,7 +19,7 @@ namespace eval debug {
 
 			puts $logfd "[clock seconds].$usec \[[pid]\]: \[$src\] => $msg"
 
-			if {$logfile != "stderr"} {
+			if {$logfd != "stderr"} {
 				close $logfd
 			}
 		}
