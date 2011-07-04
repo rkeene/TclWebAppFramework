@@ -51,6 +51,10 @@ rename web_test_puts ::puts
 	::web::widget::entry test -noputs -default One -type testing -attribute id moreTest -attribute onClick "doSomething();"
 } -result {<input class="widget_testing" id="moreTest" name="test" onClick="doSomething();" type="testing" value="One">}
 
+::tcltest::test web-entry-0.6 "Widget Entry - Attributes 3" -body {
+	::web::widget::entry test -noputs -default {[One]} -type testing -attribute id moreTest -attribute onClick "doSomething(a\[0\]);"
+} -result {<input class="widget_testing" id="moreTest" name="test" onClick="doSomething(a[0]);" type="testing" value="[One]">}
+
 ## Password
 ::tcltest::test web-password-0.0 "Widget Password" -body {
 	::web::widget::password test

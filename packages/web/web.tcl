@@ -239,6 +239,7 @@ namespace eval ::web {
 
 					if {[llength $option_arg_set] == 1} {
 						set var "$option"
+						set option_arg_set [lindex $option_arg_set 0]
 					} else {
 						set var "${option}([lrange $option_arg_set 0 end-1])"
 						set option_arg_set [lindex $option_arg_set end]
