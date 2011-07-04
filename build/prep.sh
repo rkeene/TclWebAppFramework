@@ -35,6 +35,8 @@ find . -type f -name .cvsignore -print0 | xargs -0 rm -rf
 	exit 0
 ) || exit 1
 
+packages/web/test.tcl || exit 1
+
 # Delete test databases
 rm -f packages/db/test.{mk4,sqlite}
 rm -f packages/db/do-tests.sh

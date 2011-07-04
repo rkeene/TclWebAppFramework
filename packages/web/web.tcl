@@ -1,4 +1,4 @@
-package provide web 0.3
+package provide web 0.4
 
 namespace eval ::web {
 	proc _set_root {} {
@@ -150,35 +150,182 @@ namespace eval ::web {
 	}
 
 	namespace eval ::web::widget {
-		proc entry {name {default ""} {type text}} {
-			set currval [::web::getarg $name $default]
+		proc _handle_args {cmd olddefinition options_list argsval} {
+			set mandatory_list [list]
+			set arg_usage_list [list]
+			foreach def $olddefinition {
+				set var [lindex $def 0]
 
-			set name [::web::convert_html_entities $name]
-			set currval [::web::convert_html_entities $currval]
+				if {[llength $def] == 2} {
+					set val [lindex $def 1]
 
-			puts -nonewline "<input class=\"widget_${type}\" id=\"$name\" type=\"$type\" name=\"$name\" value=\"$currval\">"
-		}
+					set to_set($var) $val
 
-		proc password {name {default ""}} {
-			return [entry $name $default password]
-		}
+					lappend arg_usage_list "?${var}?"
+				} else {
+					lappend mandatory_list $var
 
-		proc dropdown {name entries multiple {default ""} {size 1}} {
-			set currval [::web::getarg $name $default]
-
-			set name [::web::convert_html_entities $name]
-
-			if {$size == 1} {
-				set type "listbox"
-			} else {
-				set type "dropdown"
+					lappend arg_usage_list $var
+				}
 			}
+
+			set new_argsval [lrange $argsval [llength $mandatory_list] end]
+
+			if {[string index [lindex $new_argsval 0] 0] != "-" && $olddefinition != "" && [llength $argsval] <= [llength $olddefinition]} {
+				# Use old definition
+
+				if {[llength $argsval] < [llength $mandatory_list]} {
+					return -code error "wrong # args: should be \"$cmd [join $arg_usage_list " "]\""
+				}
+
+				set olddefinition [lrange $olddefinition 0 [expr {[llength $argsval] - 1}]]
+
+				foreach def $olddefinition argval $argsval {
+					set var [lindex $def 0]
+
+					set to_set($var) $argval
+				}
+			} else {
+				# Use new definition
+				if {[llength $argsval] < [llength $mandatory_list]} {
+					return -code error "wrong # args: should be \"$cmd [join $mandatory_list " "] ?option ...?\""
+				}
+
+				foreach argval [lrange $argsval 0 [expr {[llength $mandatory_list] - 1}]] mandatory $mandatory_list {
+					set to_set($mandatory) $argval
+				}
+
+				set argsval $new_argsval
+
+				foreach optioninfo $options_list {
+					set option [lindex $optioninfo 0]
+					if {[string index $option end] == "*"} {
+						set option [string range $option 0 end-1]
+					}
+
+					set optionsinfo($option) $optioninfo
+				}
+
+				set options_help [join [array names optionsinfo] ", "]
+
+				for {set idx 0} {$idx < [llength $argsval]} {incr idx} {
+					set argval [lindex $argsval $idx]
+
+					if {![info exists optionsinfo($argval)]} {
+						return -code error "bad option \"$argval\": must be $options_help"
+					}
+
+					set option [lindex $optionsinfo($argval) 0]
+					set option_args [lrange $optionsinfo($argval) 1 end]
+
+					if {[string index $option end] == "*"} {
+						set option [string range $option 1 end-1]
+
+						set update_mode "lappend"
+					} else {
+						set option [string range $option 1 end]
+
+						set update_mode "set"
+					}
+
+					set option_arg_set [list]
+					foreach option_arg $option_args {
+						incr idx
+						set option_argval [lindex $argsval $idx]
+
+						lappend option_arg_set $option_argval
+					}
+
+
+					if {[llength $option_arg_set] == 1} {
+						set var "$option"
+					} else {
+						set var "${option}([lrange $option_arg_set 0 end-1])"
+						set option_arg_set [lindex $option_arg_set end]
+					}
+
+					$update_mode to_set($var) $option_arg_set
+				}
+			}
+
+			foreach {var val} [array get to_set] {
+				uplevel 1 [list set $var $val]
+			}
+
+			return
+		}
+
+		proc _build_html_widget {entity attrs_list} {
+			set html "<$entity"
+
+			array set attrs $attrs_list
+
+			foreach attr [lsort -dictionary [array names attrs]] {
+				set val $attrs($attr)
+
+				if {$val == ""} {
+					append html " $attr"
+				} else {
+					append html " $attr=\"[::web::convert_html_entities $val]\""
+				}
+			}
+
+			append html ">"
+
+			return $html
+		}
+
+		proc entry args {
+			array set attribute [list]
+			_handle_args entry {name {default ""} {type "text"}} [list "-default value" "-type value" "-attribute value value" "-noputs"] $args
+
+			set currval [::web::getarg $name $default]
+
+			set attrs(id) $name
+			set attrs(class) "widget_${type}"
+			set attrs(type) $type
+			set attrs(name) $name
+			set attrs(value) $currval
+			array set attrs [array get attribute]
+
+			set html [_build_html_widget "input" [array get attrs]]
+
+			if {![info exists noputs]} {
+				puts -nonewline $html
+			}
+
+			return $html
+		}
+
+		proc password {name args} {
+			if {[llength $args] == 1} {
+				set args [list "-default" [lindex $args 0]]
+			}
+
+			set cmd $args
+			set cmd [linsert $cmd 0 entry $name -type password]
+
+			return [eval $cmd]
+		}
+
+		proc dropdown args {
+			array set attribute [list]
+			_handle_args dropdown {name entries multiple {default ""} {size 1} {type "dropdown"}} [list "-default value" "-type value" "-size value" "-attribute value value" "-noputs"] $args
+
+			set currval [::web::getarg $name $default]
+
+			set attrs(id) $name
+			set attrs(class) "widget_${type}"
+			set attrs(name) $name
+			set attrs(size) $size
+			array set attrs [array get attribute]
 
 			if {$multiple} {
-				puts "<select class=\"widget_${type}\" id=\"$name\" name=\"$name\" size=\"$size\" multiple>"
-			} else {
-				puts "<select class=\"widget_${type}\" id=\"$name\" name=\"$name\" size=\"$size\">"
+				set attrs(multiple) ""
 			}
+
+			set html [_build_html_widget "select" [array get attrs]]
+			append html "\n"
 
 			foreach entry $entries {
 				set entry_val [lindex $entry 0]
@@ -193,90 +340,147 @@ namespace eval ::web {
 				set entry_val [::web::convert_html_entities $entry_val]
 				set entry_desc [::web::convert_html_entities $entry_desc]
 
-				puts "  <option value=\"$entry_val\"${selected}>$entry_desc</option>"
+				append html "  <option value=\"$entry_val\"${selected}>$entry_desc</option>\n"
 			}
 
-			puts "</select>"
+			append html "</select>"
+
+			if {![info exists noputs]} {
+				puts -nonewline $html
+			}
+
+			return $html
 		}
 
-		proc listbox {name entries size multiple {default ""}} {
-			return [dropdown $name $entries $multiple $default $size]
+		proc listbox {name entries size multiple args} {
+			if {[llength $args] == 1} {
+				set args [list "-default" [lindex $args 0]]
+			}
+
+			lappend args -size $size
+			lappend args -type listbox
+
+			set cmd $args
+			set cmd [linsert $cmd 0 dropdown $name $entries $multiple]
+
+			return [eval $cmd]
 		}
 
-		proc checkbox {name checkedvalue text {default ""}} {
+		proc checkbox args {
+			array set attribute [list]
+			_handle_args checkbox {name checkedvalue text {default ""}} [list "-default value" "-attribute value value" "-noputs"] $args
+
 			set currval [::web::getarg $name $default]
 
+			set attrs(id) $name
+			set attrs(class) "widget_checkbox"
+			set attrs(type) checkbox
+			set attrs(name) $name
+			set attrs(value) $checkedvalue
+			array set attrs [array get attribute]
+
 			if {$currval == $checkedvalue} {
-				set checked " checked"
-			} else {
-				set checked ""
+				set attrs(checked) ""
 			}
 
-			set name [::web::convert_html_entities $name]
-			set checkedvalue [::web::convert_html_entities $checkedvalue]
+			set html [_build_html_widget "input" [array get attrs]]
+			append html " $text</input><br>"
 
-			puts -nonewline "<input class=\"widget_checkbox\" id=\"$name\" type=\"checkbox\" name=\"$name\" value=\"$checkedvalue\"${checked}> $text<br>"
+			if {![info exists noputs]} {
+				puts -nonewline $html
+			}
+
+			return $html
 		}
 
 		proc button args {
-			set useAjax 0
-			if {[lindex $args 0] == "-ajax"} {
-				set args [lrange $args 1 end]
+			array set attribute [list]
+			_handle_args button {name {value ""}} [list "-value value" "-attribute value value" "-noputs" "-ajax"] $args
+
+			if {[info exists ajax]} {
 				set useAjax 1
+			} else {
+				set useAjax 0
 			}
-			if {[llength $args] != 1 && [llength $args] != 2} {
-				return -code error "wrong # args: should be \"button \[-ajax\] name ?value?\""
-			}
-			set name [lindex $args 0]
-			set value [lindex $args 1]
 
 			if {$value == ""} {
 				set value $name
 			}
 
-			set name [::web::convert_html_entities $name]
-			set value [::web::convert_html_entities $value]
+			set attrs(id) $name
+			set attrs(class) "widget_button"
+			set attrs(type) submit 
+			set attrs(name) $name
+			set attrs(value) $value
+			array set attrs [array get attribute]
 
-			set ajaxpart ""
 			if {$useAjax} {
-				_createXMLHTTPObject
-
-				set ajaxpart ""
+				set html [_createXMLHTTPObject]
+			} else {
+				set html ""
 			}
 
-			puts -nonewline "<input class=\"widget_button\" id=\"$name\" type=\"submit\" name=\"$name\" value=\"$value\"${ajaxpart}>"
+			append html [_build_html_widget "input" [array get attrs]]
+
+			if {![info exists noputs]} {
+				puts -nonewline $html
+			}
+
+			return $html
 		}
 
 		proc imgbutton args {
-			set useAjax 0
-			if {[lindex $args 0] == "-ajax"} {
-				set args [lrange $args 1 end]
-				set useAjax 1
-			}
-			if {[llength $args] != 3 && [llength $args] != 4} {
-				return -code error "wrong # args: should be \"imgbutton \[-ajax\] name imgname imgclass ?descr?\""
-			}
-			set name [lindex $args 0]
-			set imgname [lindex $args 1]
-			set imgclass  [lindex $args 2]
-			set descr [lindex $args 3]
+			array set attribute [list]
+			_handle_args imgbutton {name imgname imgclass {desc ""}} [list "-desc value" "-attribute value value" "-noputs" "-ajax"] $args
 
-			set name [::web::convert_html_entities $name]
-			set descr [::web::convert_html_entities $descr]
+			if {[info exists ajax]} {
+				set useAjax 1
+			} else {
+				set useAjax 0
+			}
 
 			set image [::web::image $imgname "" $imgclass 1]
 
-			puts -nonewline "<input class=\"widget_imgbutton\" id=\"$name\" type=\"image\" src=\"$image\" name=\"$name\" alt=\"$descr\" title=\"$descr\">"
+			set attrs(id) $name
+			set attrs(class) "widget_imgbutton"
+			set attrs(type) image
+			set attrs(src) $image
+			set attrs(name) $name
+
+			if {$desc != ""} {
+				set attrs(alt) $desc
+				set attrs(title) $desc
+			}
+
+			array set attrs [array get attribute]
+
+			if {$useAjax} {
+				set html [_createXMLHTTPObject]
+			} else {
+				set html ""
+			}
+
+			append html [_build_html_widget "input" [array get attrs]]
+
+			if {![info exists noputs]} {
+				puts -nonewline $html
+			}
+
+			return $html
 		}
 
 		proc _createXMLHTTPObject {} {
-			if {![info exists ::request::WebApp_XMLHTTPObjectCreated]} {
-				set ::request::WebApp_XMLHTTPObjectCreated 1
-				puts {
+			if {[info exists ::request::WebApp_XMLHTTPObjectCreated]} {
+				return ""
+			}
+
+			set ::request::WebApp_XMLHTTPObjectCreated 1
+			return {
 <script type="text/javascript">
 <!--
 	function WebApp_sendEvent(url) {
 		var WebApp_xmlHttpObject = null;
+		var e;
 
 		// Try to get the right object for different browser
 		try {
@@ -312,7 +516,6 @@ namespace eval ::web {
 	}
 -->
 </script>
-				}
 			}
 		}
 	}
