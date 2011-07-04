@@ -18,6 +18,11 @@ namespace eval session {
 			return 1
 		}
 
+		# Ignore changes to "sessionid" session variable with respect to writing requests
+		if {$idx == "sessionid"} {
+			return 1
+		}
+
 		catch {
 			debug::log session::__mark_for_writing "Session variable ($var) index \"$idx\" has been written or unset ($op) (from [string range [info level -1] 0 50])"
 		}
