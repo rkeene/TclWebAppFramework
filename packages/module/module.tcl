@@ -71,6 +71,11 @@ namespace eval module {
 			return ""
 		}
 
+		# Verify that this is a public action
+		if {[string index $action 0] == "_" || [string match "*::*" $action]} {
+			return ""
+		}
+
 		if {$action == ""} {
 			set action "main"
 		}
