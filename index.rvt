@@ -1,6 +1,7 @@
 <?
 
 namespace eval cache {}
+namespace eval ::tclwebappframework {}
 
 if {[catch {
 	# Clean up from previous run, if needed
@@ -17,10 +18,10 @@ if {[catch {
 	## Load the database configuration if not already done
 	if {![info exists ::done_onlyonce_dbconfig]} {
 		if {[file exists modules/load/onlyonce/dbconfig.tcl]} {
-			source modules/load/onlyonce/dbconfig.tcl
+			namespace eval :: [list source modules/load/onlyonce/dbconfig.tcl]
 		}
 		if {[file exists local/modules/load/onlyonce/dbconfig.tcl]} {
-			source local/modules/load/onlyonce/dbconfig.tcl
+			namespace eval :: [list source local/modules/load/onlyonce/dbconfig.tcl]
 		}
 		set ::done_onlyonce_dbconfig 1
 	}
@@ -31,11 +32,12 @@ if {[catch {
 		package require debug
 		package require web
 		package require user
+		package require tclwebappframework
 
 		foreach file [glob -nocomplain local/modules/*/preload/*.tcl modules/*/load/*.tcl modules/load/onlyonce/*.tcl local/modules/*/load/*.tcl local/modules/load/onlyonce/*.tcl] {
 			debug::log index.rvt "source $file"
 
-			namespace eval :: "source $file"
+			namespace eval :: [list source $file]
 		}
 		set ::done_onlyonce 1
 	}
@@ -61,6 +63,7 @@ if {[catch {
 	# Load scripts that get run with every request
 	foreach file [glob -nocomplain local/modules/preload/*.tcl modules/load/*.tcl local/modules/load/*.tcl] {
 		debug::log index.rvt "source $file"
+
 		source $file
 	}
 
@@ -75,12 +78,15 @@ if {[catch {
 	## This prefix is ignored, but used for sorting.
 	## The action called for the module is called "start" (for initialization) and "stop" for
 	## deinitialization of this request
+	##
+	## These module actions (start/stop) should return a page to display as a header/footer
 	if {![info exists ::finimods]} {
 		set ::finimods ""
 		foreach initmod [lsort -dictionary $::initmods] {
 			if {[string match "*:*" $initmod]} {
 				set initmod [join [lrange [split $initmod :] 1 end] :]
 			}
+
 			set modpage [module::call $initmod start]
 			if {$modpage == ""} {
 				continue
@@ -129,14 +135,23 @@ if {[catch {
 	# Determine action method to call for this module, and invoke the module
 	## It should return a page name to display to the user
 	if {[info exists args(action)]} {
-		debug::log index.rvt [list module::call $module $args(action) $subaction]
-
-		set newpage [module::call $module $args(action) $subaction]
+		set action $args(action)
 	} else {
-		debug::log index.rvt [list module::call $module "" $subaction]
-
-		set newpage [module::call $module "" $subaction]
+		set action ""
 	}
+
+	# Call the "pre-request" action for every initialization module, if it exists
+	#foreach initmod $initmods {
+	#	if {[module::call $initmod pre-request]} {
+	#	}
+	#}
+
+	debug::log index.rvt [list module::call $module $action $subaction]
+
+	set newpage [module::call $module $action $subaction]
+
+	# Call the "post-request" action for every initialization module, if it exists
+	## XXX TODO
 
 	# Assume a blank return value means
 	# that the user is required to authenticate?
