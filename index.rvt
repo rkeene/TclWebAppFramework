@@ -87,7 +87,6 @@ if {[catch {
 	## These module actions (start/stop) should return a page to display as a header/footer
 	set initmods [::tclwebappframework::get_initmods]
 	set finimods [::tclwebappframework::get_finimods]
-debug::log index.rvt "initmods=$initmods"
 	if {![info exists ::tclwebappframework::done_initmods]} {
 		set ::tclwebappframework::done_initmods 1
 		set ::tclwebappframework::headers [list]
