@@ -36,7 +36,7 @@ namespace eval config {}
 set rootuser ""
 set rootpass ""
 while 1 {
-	puts -nonewline "Please enter a username: "
+	puts -nonewline "Please enter a username for the initial user: "
 	flush stdout
 	gets stdin rootuser
 
@@ -83,7 +83,7 @@ if {$config::db(mode) == "mysql"} {
 	gets stdin config::db(filename)
 
 	if {[string index $config::db(filename) 0] != "/"} {
-		puts -nonewline "Database relative to index.rvt (Normal) or executable (Starkit) (y/N): "
+		puts -nonewline "Database relative to running script (y) or setup.tcl (n) (y/N): "
 		flush stdout
 		gets stdin relative
 	} else {
