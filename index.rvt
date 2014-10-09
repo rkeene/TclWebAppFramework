@@ -222,7 +222,7 @@ catch {
 
 if {$failed} {
 	# Throw the error again if there's an error handler
-	if {false && [namespace which -command rivet_error] != ""} {
+	if {[namespace which -command rivet_error] != ""} {
 		error $errmsg $savedtrace
 	} else {
 		# Otherwise, handle it ourselves.
