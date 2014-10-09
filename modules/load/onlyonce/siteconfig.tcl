@@ -1,4 +1,7 @@
+#! /usr/bin/env tclsh
+
 package require web
+package require tclwebappframework
 
 namespace eval siteconfig {
 	proc init {} {
@@ -12,11 +15,14 @@ namespace eval siteconfig {
 	}
 }
 
-if {[module::register siteconfig "" "" "Site graphical configuration"]} {
-	lappend ::initmods siteconfig
+if {[module::register siteconfig "" "" "Site graphical configuration" [list init start stop]]} {
+	::tclwebappframework::register_initmod siteconfig
 }
 
+# Set default CSS
 namespace eval ::html {
+	variable css
+
 	set css(a) { text-decoration: none; color: #FF0000; }
 	set css(.icons) { border: 0; }
 	set css(.module_error) { text-align: center; color: #FF0000; }

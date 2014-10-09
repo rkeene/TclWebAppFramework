@@ -1,6 +1,7 @@
-package provide module 0.2
+package provide module 0.3
 
 package require user
+package require debug
 
 namespace eval module {
 	# Name: ::module::register
@@ -11,7 +12,7 @@ namespace eval module {
 	#	desc		Text description of module
 	# Rets: 1 on success, 0 otherwise
 	# Stat: Complete
-	proc register {module flags icon desc} {
+	proc register {module flags icon desc {exposedactions ""}} {
 		set ret 0
 
 		catch {
@@ -19,7 +20,11 @@ namespace eval module {
 		}
 
 		if {$ret} {
-			set ::module::modinfo($module) [::list $flags $icon $desc]
+			debug::log module::register "Registering module $module (ret = $ret)"
+
+			set ::module::modinfo($module) [::list $flags $icon $desc $exposedactions]
+		} else {
+			debug::log module::register "Failed to register module $module (ret = $ret)"
 		}
 
 		return $ret
@@ -59,33 +64,44 @@ namespace eval module {
 	#	file to be parsed.
 	# Stat: Complete
 	proc call {module {action main} {subaction ""}} {
+		# Do not call modules that don't exist
 		if {![::info exists ::module::modinfo($module)]} {
 			return ""
 		}
 
-		set requiredflags [lindex $::module::modinfo($module) 0]
+		# Use a default action
+		if {$action == ""} {
+			set action "main"
+		}
 
 		# Verify that the user specified has suffcient privileges to
 		# use this module..
+		set requiredflags [lindex $::module::modinfo($module) 0]
 		if {![user::hasflag $requiredflags]} {
 			return ""
 		}
 
 		# Verify that this is a public action
+		## Exclude actions which start with an underscore or contain a namespace seperator
 		if {[string index $action 0] == "_" || [string match "*::*" $action]} {
 			return ""
 		}
 
-		if {$action == ""} {
-			set action "main"
+		## If the module enumerates its actions, verify that this action is on the list
+		set exposedactions [lindex $::module::modinfo($module) 3]
+		if {$exposedactions != "" && [lsearch -exact $exposedactions $action] == -1} {
+			return ""
 		}
 
+		# Keep track of the current module stack
 		namespace eval ::request::module {}
-
 		lappend ::request::module::currentmodule $module
 
+		# Call the module
+		debug::log module::call "Calling module $module\(action=$action, subaction=$subaction)"
 		set ret [${module}::${action} $subaction]
 
+		# Pop the module call stack
 		set ::request::module::currentmodule [lrange $::request::module::currentmodule 0 end-1]
 
 		return $ret
@@ -126,7 +142,7 @@ namespace eval module {
 	# Args:
 	#	modules		List of modules to return info on
 	# Rets: A list containing the following list for each module:
-	#	module flags icon desc
+	#	module flags icon desc exposedactions
 	# Stat: Complete
 	proc info {modules} {
 		set ret ""
@@ -139,7 +155,8 @@ namespace eval module {
 			set flags [lindex $::module::modinfo($module) 0]
 			set icon [lindex $::module::modinfo($module) 1]
 			set desc [lindex $::module::modinfo($module) 2]
-			lappend ret [list $module $flags $icon $desc]
+			set exposedactions [lindex $::module::modinfo($module) 3]
+			lappend ret [list $module $flags $icon $desc $exposedactions]
 		}
 
 		return $ret

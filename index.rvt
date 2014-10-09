@@ -8,38 +8,43 @@ if {[catch {
 	unset -nocomplain args
 	unset -nocomplain module
 
+	# Set defaults for every request
+	set displayheaders 1
+
 	# If this interpreter (not request) has not already been globally initialized, initialize it now
 	## Update the global auto_path if not already done
-	if {![info exists ::auto_path_set]} {
-		set ::auto_path_set 1
-		lappend auto_path local/packages packages
+	if {![info exists ::tclwebappframework::auto_path_set]} {
+		set ::tclwebappframework::auto_path_set 1
+		lappend ::auto_path local/packages packages
 	}
 
 	## Load the database configuration if not already done
-	if {![info exists ::done_onlyonce_dbconfig]} {
-		if {[file exists modules/load/onlyonce/dbconfig.tcl]} {
-			namespace eval :: [list source modules/load/onlyonce/dbconfig.tcl]
+	if {![info exists ::tclwebappframework::done_onlyonce_dbconfig]} {
+		foreach file [list modules/load/onlyonce/dbconfig.tcl local/modules/load/onlyonce/dbconfig.tcl] {
+			if {[file exists $file]} {
+				namespace eval :: [list source $file]
+			}
 		}
-		if {[file exists local/modules/load/onlyonce/dbconfig.tcl]} {
-			namespace eval :: [list source local/modules/load/onlyonce/dbconfig.tcl]
-		}
-		set ::done_onlyonce_dbconfig 1
+
+		set ::tclwebappframework::done_onlyonce_dbconfig 1
 	}
 
 	## Load scripts that get loaded for every interpreter
-	if {![info exists ::done_onlyonce]} {
+	if {![info exists ::tclwebappframework::done_onlyonce]} {
 		package require module
 		package require debug
 		package require web
 		package require user
 		package require tclwebappframework
 
+		debug::logfile -
+
 		foreach file [glob -nocomplain local/modules/*/preload/*.tcl modules/*/load/*.tcl modules/load/onlyonce/*.tcl local/modules/*/load/*.tcl local/modules/load/onlyonce/*.tcl] {
-			debug::log index.rvt "source $file"
+			debug::log index.rvt "(per-interp) source $file"
 
 			namespace eval :: [list source $file]
 		}
-		set ::done_onlyonce 1
+		set ::tclwebappframework::done_onlyonce 1
 	}
 
 	# Load this requests environment
@@ -52,8 +57,8 @@ if {[catch {
 		set module $args(module)
 	} else {
 		#a... otherwise use the "defaultmodule" global variable. 
-		if {[info exists ::defaultmodule]} {
-			set module $::defaultmodule
+		if {[info exists ::tclwebappframework::defaultmodule]} {
+			set module $::tclwebappframework::defaultmodule
 		} else {
 			## ... failing that use the module named "main"
 			set module main
@@ -62,7 +67,7 @@ if {[catch {
 
 	# Load scripts that get run with every request
 	foreach file [glob -nocomplain local/modules/preload/*.tcl modules/load/*.tcl local/modules/load/*.tcl] {
-		debug::log index.rvt "source $file"
+		debug::log index.rvt "(per-request) source $file"
 
 		source $file
 	}
@@ -80,26 +85,28 @@ if {[catch {
 	## deinitialization of this request
 	##
 	## These module actions (start/stop) should return a page to display as a header/footer
-	if {![info exists ::finimods]} {
-		set ::finimods ""
-		foreach initmod [lsort -dictionary $::initmods] {
-			if {[string match "*:*" $initmod]} {
-				set initmod [join [lrange [split $initmod :] 1 end] :]
-			}
+	set initmods [::tclwebappframework::get_initmods]
+	set finimods [::tclwebappframework::get_finimods]
+debug::log index.rvt "initmods=$initmods"
+	if {![info exists ::tclwebappframework::done_initmods]} {
+		set ::tclwebappframework::done_initmods 1
+		set ::tclwebappframework::headers [list]
+		set ::tclwebappframework::footers [list]
 
+		foreach initmod $initmods {
 			set modpage [module::call $initmod start]
 			if {$modpage == ""} {
 				continue
 			}
-			lappend ::headers $initmod $modpage
-			set ::finimods [linsert $::finimods 0 $initmod]
+			lappend ::tclwebappframework::headers $initmod $modpage
 		}
-		foreach finimod $::finimods {
+
+		foreach finimod $finimods {
 			set modpage [module::call $finimod stop]
 			if {$modpage == ""} {
 				continue
 			}
-			lappend ::footers $finimod $modpage
+			lappend ::tclwebappframework::footers $finimod $modpage
 		}
 	}
 
@@ -110,12 +117,11 @@ if {[catch {
 		}
 		if {[string match "*.x" $var]} {
 			set basevar [string range $var 0 end-2]
-			if {![info exists ::request::args($basevar.y)]} {
+			if {![info exists args($basevar.y)]} {
 				continue
 			}
-			set ::request::args($basevar) [list $::request::args($basevar.x) $::request::args($basevar.y)]
-			unset ::request::args($basevar.x) ::request::args($basevar.y)
-			set var "$basevar"
+			set args($basevar) [list $args($basevar.x) $args($basevar.y)]
+			unset args($basevar.x) args($basevar.y)
 		}
 	}
 
@@ -141,17 +147,18 @@ if {[catch {
 	}
 
 	# Call the "pre-request" action for every initialization module, if it exists
-	#foreach initmod $initmods {
-	#	if {[module::call $initmod pre-request]} {
-	#	}
-	#}
+	foreach initmod $initmods {
+		module::call $initmod pre-request
+	}
 
 	debug::log index.rvt [list module::call $module $action $subaction]
 
 	set newpage [module::call $module $action $subaction]
 
 	# Call the "post-request" action for every initialization module, if it exists
-	## XXX TODO
+	foreach initmod $initmods {
+		module::call $initmod post-request
+	}
 
 	# Assume a blank return value means
 	# that the user is required to authenticate?
@@ -161,9 +168,23 @@ if {[catch {
 		set newpage [module::call login "" ""]
 	}
 
-	# Display the header output as determined earlier for this interpreter
-	if {![info exists args(_webapp_noheader)]} {
-		foreach {headmod header} $::headers {
+	# --------------------------------------
+	# Begin producing output
+	# --------------------------------------
+
+	# Up until this point, no output has been produced
+	# Display the collection of fragments that have been built up from the
+	# previous steps
+
+	# Display headers
+	## Do not display headers if headers are not requested
+	if {[info exists args(_webapp_noheader)]} {
+		set displayheaders 0
+	}
+
+	if {$displayheaders} {
+		# Display the header output as determined earlier for this interpreter
+		foreach {headmod header} $::tclwebappframework::headers {
 			debug::log index.rvt "Displaying $header/$headmod"
 			display $header $headmod
 		}
@@ -172,9 +193,9 @@ if {[catch {
 	# Display the actual page
 	display $newpage $module
 
-	# Display the footer output
-	if {![info exists args(_webapp_noheader)]} {
-		foreach {footmod footer} $::footers {
+	if {$displayheaders} {
+		# Display the header output as determined earlier for this interpreter
+		foreach {footmod footer} $::tclwebappframework::footers {
 			debug::log index.rvt "Displaying $footer/$footmod"
 			display $footer $footmod
 		}
@@ -202,7 +223,7 @@ catch {
 
 if {$failed} {
 	# Throw the error again if there's an error handler
-	if {[namespace which -command rivet_error] != ""} {
+	if {false && [namespace which -command rivet_error] != ""} {
 		error $errmsg $savedtrace
 	} else {
 		# Otherwise, handle it ourselves.
