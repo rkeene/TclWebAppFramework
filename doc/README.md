@@ -88,6 +88,7 @@ namespace the module will provide some well-known named functions from.
 
 Generally the module directory name and the module name should be the same.
 In that case, if we were creating a module called "example" we would create:
+
   1. local/modules/example (directory)
   2. local/modules/example/load/example.tcl (file, per-interpreter script)
   3. local/modules/example/main.rvt (file, Rivet script)
@@ -96,6 +97,8 @@ The file (all paths will be relative to the module directory of
 "local/modules/example") "load/example.tcl" should do all of the
 per-interpreter initialization to make this module useful and ready to use for
 a request.  That includes:
+
   1. Creating a namespace named after the module
-  2. Creating a procedure called "init" in that namespace ([::example::init]) which must return some form of "true"
+  2. Creating a procedure called "init" in that namespace ([::example::init])
+    which must return some form of "true"
   3. Registering the module with [module::register]
