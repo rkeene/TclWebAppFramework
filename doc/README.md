@@ -8,9 +8,9 @@ The Tcl Web Application Framework provides a basic framework for application
 developers to write web-based applications without having to deal with some
 of the common overhead associated with building web-based applications, such
 as:
-    1. Sessions
-    2. Users
-    3. Databases
+  1. Sessions
+  2. Users
+  3. Databases
 
 It is intended to be extensible and replacable so that if the developer does
 wish to do these things they can do so while retaining the remaining features.
@@ -45,20 +45,20 @@ Per-Interpreter Paths
 ---------------------
     1. modules/load/onlyonce/dbconfig.tcl
     2. local/modules/load/onlyonce/dbconfig.tcl
-    3. local/modules/\*/preload/\*.tcl
-    4. modules/\*/load/\*.tcl
-    5. modules/load/onlyonce/\*.tcl
-    6. local/modules/\*/load/\*.tcl
-    7. local/modules/load/onlyonce/\*.tcl
+    3. local/modules/*/preload/*.tcl
+    4. modules/*/load/*.tcl
+    5. modules/load/onlyonce/*.tcl
+    6. local/modules/*/load/*.tcl
+    7. local/modules/load/onlyonce/*.tcl
 
 
 Per-Request Paths
 -----------------
-    1. local/modules/preload/\*.tcl (before the page is displayed)
-    2. modules/load/\*.tcl (before the page is displayed)
-    3. local/modules/load/\*.tcl (before the page is displayed)
-    4. modules/unload/\*.tcl (after the page is displayed)
-    5. local/modules/unload/\*.tcl (after the page is displayed)
+    1. local/modules/preload/*.tcl (before the page is displayed)
+    2. modules/load/*.tcl (before the page is displayed)
+    3. local/modules/load/*.tcl (before the page is displayed)
+    4. modules/unload/*.tcl (after the page is displayed)
+    5. local/modules/unload/*.tcl (after the page is displayed)
 
 
 Writing Your Application
