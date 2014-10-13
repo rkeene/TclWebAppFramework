@@ -45,23 +45,23 @@ state, such as the ::request namespace or output to the HTTP stream).
 Per-Interpreter Paths
 ---------------------
 
-  1. modules/load/onlyonce/dbconfig.tcl
-  2. local/modules/load/onlyonce/dbconfig.tcl
-  3. local/modules/*/preload/*.tcl
-  4. modules/*/load/*.tcl
-  5. modules/load/onlyonce/*.tcl
-  6. local/modules/*/load/*.tcl
-  7. local/modules/load/onlyonce/*.tcl
+  1. `modules/load/onlyonce/dbconfig.tcl`
+  2. `local/modules/load/onlyonce/dbconfig.tcl`
+  3. `local/modules/*/preload/*.tcl`
+  4. `modules/*/load/*.tcl`
+  5. `modules/load/onlyonce/*.tcl`
+  6. `local/modules/*/load/*.tcl`
+  7. `local/modules/load/onlyonce/*.tcl`
 
 
 Per-Request Paths
 -----------------
 
-  1. local/modules/preload/*.tcl (before the page is displayed)
-  2. modules/load/*.tcl (before the page is displayed)
-  3. local/modules/load/*.tcl (before the page is displayed)
-  4. modules/unload/*.tcl (after the page is displayed)
-  5. local/modules/unload/*.tcl (after the page is displayed)
+  1. `local/modules/preload/*.tcl` (before the page is displayed)
+  2. `modules/load/*.tcl` (before the page is displayed)
+  3. `local/modules/load/*.tcl` (before the page is displayed)
+  4. `modules/unload/*.tcl` (after the page is displayed)
+  5. `local/modules/unload/*.tcl` (after the page is displayed)
 
 
 Writing Your Application
@@ -75,8 +75,8 @@ As above, the "local" tree is searched along with the framework paths.  In
 addition many of the commands from other packages will prefer a "local/"
 path if a replacement file can be found there.  Example commands are:
 
-  1. [display]
-  2. [web::image]
+  1. `[display]`
+  2. `[web::image]`
 
 Modules
 -------
