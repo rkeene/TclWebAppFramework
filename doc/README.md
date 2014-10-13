@@ -64,6 +64,32 @@ Per-Request Paths
   5. `local/modules/unload/*.tcl` (after the page is displayed)
 
 
+Request Processing Is Distinct From Output Processing
+-----------------------------------------------------
+
+In the Tcl Web Application Framework, generated output is handled by displaying
+Rivet fragments.  These fragments are returned by various modules and the order
+determines what the output will be.  The "html" module, for example, supplies
+an HTML header and footer (using `[::tclwebappframework::register_initmod]`)
+which are Rivet fragments displayed before and after the requested module's
+Rivet fragments.
+
+A small note should be made here that all Tcl procedures are called (except for
+the "unload" scripts are `[source]`d) before any output is produced.
+
+That is, request processing (taking the user request and deciding what to do
+with it by dispatching Rivet fragments is performed entirely before displaying
+any Rivet fragments.
+
+The primary benefit to this is that any Tcl procedure called will be evaluated
+prior to any Rivet fragments being parsed, so when Rivet fragments are parsed
+they are all parsed with the same state (except for any state the Rivet
+fragments themselves modify, which is generally bad form).
+
+This is used, for example, to modify CSS from a module's action which is then
+parsed and displayed as part of the HTML header's Rivet fragment.
+
+
 Writing Your Application
 ========================
 
@@ -89,9 +115,9 @@ namespace the module will provide some well-known named functions from.
 Generally the module directory name and the module name should be the same.
 In that case, if we were creating a module called "example" we would create:
 
-  1. local/modules/example (directory)
-  2. local/modules/example/load/example.tcl (file, per-interpreter script)
-  3. local/modules/example/main.rvt (file, Rivet script)
+  1. `local/modules/example` (directory)
+  2. `local/modules/example/load/example.tcl` (file, per-interpreter script)
+  3. `local/modules/example/main.rvt` (file, Rivet script)
 
 The file (all paths will be relative to the module directory of
 "local/modules/example") "load/example.tcl" should do all of the
@@ -99,6 +125,11 @@ per-interpreter initialization to make this module useful and ready to use for
 a request.  That includes:
 
   1. Creating a namespace named after the module
-  2. Creating a procedure called "init" in that namespace ([::example::init])
+  2. Creating a procedure called "init" in that namespace (`[::example::init]`)
     which must return some form of "true"
-  3. Registering the module with [module::register]
+  3. Registering the module with `[module::register]`
+  4. Optionally a module may be requested to be called as an "initialization
+     module", which means it will accept a "start", "stop", "pre-request" and
+     "post-request" action by calling `[::tclwebappframework::register_initmod]`.
+
+
