@@ -50,6 +50,7 @@ if {[catch {
 
 			namespace eval :: [list source $file]
 		}
+
 		set ::tclwebappframework::done_onlyonce 1
 	}
 
@@ -67,15 +68,17 @@ if {[catch {
 			set module $::tclwebappframework::defaultmodule
 		} else {
 			## ... failing that use the module named "main"
-			set module main
+			set module "main"
 		}
 	}
 
 	# Load scripts that get run with every request
 	foreach file [concat \
 	    [lsort -dictionary [glob -nocomplain local/modules/preload/*.tcl]] \
+	    [lsort -dictionary [glob -nocomplain local/modules/*/preload/everyrequest/*.tcl]] \
 	    [lsort -dictionary [glob -nocomplain modules/load/*.tcl]] \
 	    [lsort -dictionary [glob -nocomplain local/modules/load/*.tcl]] \
+	    [lsort -dictionary [glob -nocomplain local/modules/*/load/everyrequest/*.tcl]] \
 	] {
 		debug::log index.rvt "(per-request) source $file"
 
@@ -84,6 +87,8 @@ if {[catch {
 
 	# If we are not someone (anonymous is someone...) make the user authenticate using the "login" module
 	if {[user::getuid] == 0} {
+		set req_module $module
+
 		set module "login"
 	}
 
@@ -160,9 +165,17 @@ if {[catch {
 		module::call $initmod pre-request
 	}
 
-	debug::log index.rvt [list module::call $module $action $subaction]
+	# Call the module action (unless the login module is requested, then
+	# always call the default action)
+	if {$module != "login"} {
+		debug::log index.rvt [list module::call $module $action $subaction]
 
-	set newpage [module::call $module $action $subaction]
+		set newpage [module::call $module $action $subaction]
+	} else {
+		debug::log index.rvt "Calling [list module::call "login" "" ""] because module has been set to \"login\""
+
+		set newpage [module::call login "" ""]
+	}
 
 	# Call the "post-request" action for every initialization module, if it exists
 	foreach initmod $initmods {
@@ -172,9 +185,13 @@ if {[catch {
 	# Assume a blank return value means
 	# that the user is required to authenticate?
 	if {$newpage == ""} {
-		set module "login"
+		if {$module != "login"} {
+			debug::log index.rvt "Calling [list module::call "login" "" ""] because $module::$action($subaction) returned a blank page."
 
-		set newpage [module::call login "" ""]
+			set module "login"
+
+			set newpage [module::call login "" ""]
+		}
 	}
 
 	# --------------------------------------
@@ -235,7 +252,9 @@ catch {
 
 if {$failed} {
 	# Throw the error again if there's an error handler
-	if {[namespace which -command rivet_error] != ""} {
+	if {[namespace which ::tclwebappframework::app_error] != ""} {
+		::tclwebappframework::app_error $errmsg $savedtrace
+	} elseif {[namespace which -command rivet_error] != ""} {
 		error $errmsg $savedtrace
 	} else {
 		# Otherwise, handle it ourselves.

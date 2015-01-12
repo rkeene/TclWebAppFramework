@@ -1,52 +1,24 @@
+# If we do not have a loaded session, load or create one
 if {![info exists ::session::vars(sessionid)]} {
+	# Get the session ID from a cookie
 	set sessionid [cookie get sessionid]
+
+	# Look for an argument to override the cookie value
 	if {[info exists args(sessionid)]} {
 		set sessionid $args(sessionid)
 	}
+
+	# Create or load the session
 	if {$sessionid == ""} {
+		# Create a new session
 		set sessionid [session::create]
+
+		# Set a cookie to hold the session ID
 		cookie set sessionid $sessionid -minutes 720
 	} else {
+		# Load the session
 		session::load $sessionid
 	}
-}
 
-# Verify that the user and pass are correct if specified
-# if they are, setup an authenticated session.
-if {[user::getuid] == "0" || [info exists args(user)]} {
-	if {[info exists args(user)]} {
-		set user_ok 0
-		set uid 0
-
-		if {![info exists args(pass)]} {
-			unset -nocomplain args(user)
-		} else {
-			set uid [user::getuid $args(user)]
-			set user_ok [user::login $uid $args(pass) "127.0.0.1"]
-		}
-	} else {
-		set user_ok 1
-		set uid [user::getuid anonymous]
-		set args(user) anonymous
-	}
-
-	if {$user_ok && $uid != "0"} {
-		set ::session::vars(user) $args(user)
-		set suidret [user::setuid $uid]
-
-		debug::log sessions.tcl "Switching to UID $uid... $suidret"
-		
-	} else {
-		unset -nocomplain ::session::vars(user)
-		user::setuid [user::getuid anonymous]
-		unset -nocomplain args(user)
-		unset -nocomplain args(pass)
-		set req_module $module
-		set module "login"
-	}
-
-	unset -nocomplain args(pass)
-	unset -nocomplain args(user)
-	unset -nocomplain args(submit)
-	unset -nocomplain uid user_ok
+	unset -nocomplain sessionid
 }
