@@ -87,7 +87,9 @@ if {[catch {
 
 	# If we are not someone (anonymous is someone...) make the user authenticate using the "login" module
 	if {[user::getuid] == 0} {
-		set req_module $module
+		if {$module != "login"} {
+			set req_module $module
+		}
 
 		set module "login"
 	}
