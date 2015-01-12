@@ -40,7 +40,7 @@ if {[catch {
 		debug::logfile -
 
 		foreach file [concat \
-		    [lsort -dictionary [glob -nocomplain local/modules/*/preload/*.tcl]]
+		    [lsort -dictionary [glob -nocomplain local/modules/*/preload/*.tcl]] \
 		    [lsort -dictionary [glob -nocomplain modules/*/load/*.tcl]] \
 		    [lsort -dictionary [glob -nocomplain modules/load/onlyonce/*.tcl]] \
 		    [lsort -dictionary [glob -nocomplain local/modules/*/load/*.tcl]] \
