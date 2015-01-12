@@ -1,37 +1,43 @@
 # Verify that the user and pass are correct if specified
 # if they are, setup an authenticated session.
-if {[user::getuid] == "0" || [info exists args(user)]} {
-	if {[info exists args(user)]} {
-		set user_ok 0
-		set uid 0
+set uid ""
+if {[user::getuid] == "0" && ![info exists args(user)]} {
+	debug::log "verify-password.tcl" "We are nobody, switching to the anonymous user."
 
-		if {![info exists args(pass)]} {
-			unset -nocomplain args(user)
+	set uid [user::getuid "anonymous"]
+} elseif {[info exists args(user)] && [info exists args(pass)]} {
+	debug::log "verify-password.tcl" "We have been asked to authenticate as a user ($args(user))"
+
+	set newuid [user::getuid $args(user)]
+	if {$newuid != "0"} {
+		set user_ok [user::login $newuid $args(pass) "127.0.0.1"]
+
+		if {$user_ok} {
+			debug::log "verify-password.tcl" "Password has been verified."
+
+			set uid $newuid
 		} else {
-			set uid [user::getuid $args(user)]
-			set user_ok [user::login $uid $args(pass) "127.0.0.1"]
+			debug::log "verify-password.tcl" "Failed to verify password, trying to switch to an anonymous user"
+
+			set uid [user::getuid "anonymous"]
 		}
 	} else {
-		set user_ok 1
-		set uid [user::getuid anonymous]
-		set args(user) anonymous
+		debug::log "verify-password.tcl" "Invalid user \"$args(user)\", ignoring."
 	}
 
-	if {$user_ok && $uid != "0"} {
-		set ::session::vars(user) $args(user)
+	unset -nocomplain user_ok newuid
+}
+
+if {$uid != ""} {
+	if {$uid != "0"} {
 		set suidret [user::setuid $uid]
 
-		debug::log sessions.tcl "Switching to UID $uid... $suidret"
-		
+		debug::log "verify-password.tcl" "Switching to UID $uid ([user::getnam $uid])... $suidret"
 	} else {
-		unset -nocomplain ::session::vars(user)
-		user::setuid [user::getuid anonymous]
-		unset -nocomplain args(user)
-		unset -nocomplain args(pass)
+		debug::log "verify-password.tcl" "Unable to initiate user switching, cannot lookup uid for \"anonymous\""
 	}
 
-	unset -nocomplain args(pass)
-	unset -nocomplain args(user)
-	unset -nocomplain args(submit)
-	unset -nocomplain uid user_ok
+	unset -nocomplain uid suidret
 }
+
+unset -nocomplain args(pass) args(user)
