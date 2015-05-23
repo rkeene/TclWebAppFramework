@@ -2,7 +2,7 @@ package provide db 0.4.0
 
 package require Mk4tcl
 package require hook
-package require debug
+package require wa_debug
 package require wa_uuid
 
 namespace eval ::db {
@@ -11,21 +11,21 @@ namespace eval ::db {
 			::set currlockholder [mk::get db.__webapplockingsystem!0 lockholder]
 			if {$currlockholder != $::db::lockingstr} {
 				return 0
-				debug::log db::__commit "Unable to commit changes (lost lock)"
+				wa_debug::log db::__commit "Unable to commit changes (lost lock)"
 			}
 		}
 
 		if {[catch {
 			if {$giveup} {
-				debug::log db [list mk::set db.__webapplockingsystem!0 lockholder ""]
+				wa_debug::log db [list mk::set db.__webapplockingsystem!0 lockholder ""]
 				mk::set db.__webapplockingsystem!0 lockholder ""
 			}
 
-			debug::log db [list mk::file commit db]
+			wa_debug::log db [list mk::file commit db]
 			mk::file commit db
 		} err]} {
-			debug::log db "   ** failed **"
-			debug::log db::__commit "Unable to commit changes ($err)"
+			wa_debug::log db "   ** failed **"
+			wa_debug::log db::__commit "Unable to commit changes ($err)"
 			return 0
 		}
 
@@ -47,11 +47,11 @@ namespace eval ::db {
 		__commit 1
 
 		if {[catch {
-			debug::log db "mk::file close db"
+			wa_debug::log db "mk::file close db"
 			mk::file close db
 		} err]} {
-			debug::log db "  ** failed **"
-			debug::log db::disconnect "Error while closing DB: $err"
+			wa_debug::log db "  ** failed **"
+			wa_debug::log db::disconnect "Error while closing DB: $err"
 		}
 	}
 
@@ -70,7 +70,7 @@ namespace eval ::db {
 
 			# Try to open the DB with a read-write lock
 			while 1 {
-				debug::log db [list mk::file open db $::config::db(filename) -readonly]
+				wa_debug::log db [list mk::file open db $::config::db(filename) -readonly]
 				mk::file open db $::config::db(filename) -readonly
 
 				::set currlockholder "FAIL"
@@ -78,27 +78,27 @@ namespace eval ::db {
 					::set currlockholder [mk::get db.__webapplockingsystem!0 lockholder]
 				}
 
-				debug::log db [list mk::file close db]
+				wa_debug::log db [list mk::file close db]
 				mk::file close db
 
 				if {$currlockholder == ""} {
 					break
 				}
 
-				debug::log db::connect "Unable to lock database, already held by $currlockholder -- waiting."
+				wa_debug::log db::connect "Unable to lock database, already held by $currlockholder -- waiting."
 				after [expr int(rand() * 10000)]
 
 			}
 		}
 
-		debug::log db [list mk::file open db $::config::db(filename) -nocommit]
+		wa_debug::log db [list mk::file open db $::config::db(filename) -nocommit]
 		mk::file open db $::config::db(filename) -nocommit
 
 		catch {
-			debug::log db [list mk::set db.__webapplockingsystem!0 lockholder $::db::lockingstr]
+			wa_debug::log db [list mk::set db.__webapplockingsystem!0 lockholder $::db::lockingstr]
 			mk::set db.__webapplockingsystem!0 lockholder $::db::lockingstr
 
-			debug::log db [list mk::file commit db]
+			wa_debug::log db [list mk::file commit db]
 			mk::file commit db
 		}
 
@@ -170,18 +170,18 @@ namespace eval ::db {
 		::set dbhandle [connect]
 
 		if {[mk::view info db.__webapplockingsystem] == ""} {
-			debug::log db [list mk::view layout db.__webapplockingsystem [list lockholder:S]]
+			wa_debug::log db [list mk::view layout db.__webapplockingsystem [list lockholder:S]]
 			mk::view layout db.__webapplockingsystem [list lockholder:S]
 			mk::set db.__webapplockingsystem!0 lockholder ""
 		}
 
 		if {[mk::view info db.__unique_fields] == ""} {
-			debug::log db [list mk::view layout db.__unique_fields [list database:S fields:S]]
+			wa_debug::log db [list mk::view layout db.__unique_fields [list database:S fields:S]]
 			mk::view layout db.__unique_fields [list database:S fields:S]
 		}
 
 		if {[mk::view info db.__fields] == ""} {
-			debug::log db [list mk::view layout db.__fields [list database:S fields:S]]
+			wa_debug::log db [list mk::view layout db.__fields [list database:S fields:S]]
 			mk::view layout db.__fields [list database:S fields:S]
 		}
 
@@ -191,13 +191,13 @@ namespace eval ::db {
 			::set chkidx [lindex $chkidx 0]
 
 			::set cursor "db.__unique_fields!${chkidx}"
-			debug::log db "Database already found, updating unique fields: $cursor"
+			wa_debug::log db "Database already found, updating unique fields: $cursor"
 		} else {
-			debug::log db "mk::row append db.__unique_fields"
+			wa_debug::log db "mk::row append db.__unique_fields"
 			::set cursor [mk::row append db.__unique_fields]
 		}
 
-		debug::log db [list mk::set $cursor database $dbname fields $uniquefields]
+		wa_debug::log db [list mk::set $cursor database $dbname fields $uniquefields]
 		mk::set $cursor database $dbname fields $uniquefields
 
 		# Create list of fields used to create this database
@@ -206,20 +206,20 @@ namespace eval ::db {
 			::set chkidx [lindex $chkidx 0]
 
 			::set cursor "db.__fields!${chkidx}"
-			debug::log db "Database already found, updating fields: $cursor"
+			wa_debug::log db "Database already found, updating fields: $cursor"
 		} else {
-			debug::log db "mk::row append db.__fields"
+			wa_debug::log db "mk::row append db.__fields"
 			::set cursor [mk::row append db.__fields]
 		}
 
-		debug::log db [list mk::set $cursor database $dbname fields $internalfields]
+		wa_debug::log db [list mk::set $cursor database $dbname fields $internalfields]
 		mk::set $cursor database $dbname fields $internalfields
 
 		# Create database
-		debug::log db [list mk::view layout db.${dbname} $fieldlist]
+		wa_debug::log db [list mk::view layout db.${dbname} $fieldlist]
 		mk::view layout db.${dbname} $fieldlist
 
-		debug::log db "mk::file commit db"
+		wa_debug::log db "mk::file commit db"
 		mk::file commit db
 
 		hook::call db::create::return 1 $dbname $newfields
@@ -272,33 +272,33 @@ namespace eval ::db {
 			::set whereval [join [lrange $wherework 1 end] =]
 			::unset wherework
 
-			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+			wa_debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idx [lindex [mk::select db.${dbname} -exact $wherevar $whereval] 0]
 
 			if {$idx == ""} {
-				debug::log db "mk::row append db.${dbname}"
+				wa_debug::log db "mk::row append db.${dbname}"
 				::set idx [mk::row append db.${dbname}]
 
-				debug::log db "mk::cursor position idx  (idx = $idx)"
+				wa_debug::log db "mk::cursor position idx  (idx = $idx)"
 				::set idx [mk::cursor position idx]
 
-				debug::log db [list mk::set db.${dbname}!${idx} $wherevar $whereval]
+				wa_debug::log db [list mk::set db.${dbname}!${idx} $wherevar $whereval]
 				mk::set db.${dbname}!${idx} $wherevar $whereval
 			}
 		} else {
-			debug::log db "mk::select db.__unique_fields -exact database $dbname"
+			wa_debug::log db "mk::select db.__unique_fields -exact database $dbname"
 			::set uniquefieldsidx [mk::select db.__unique_fields -exact database $dbname]
 
 			if {$uniquefieldsidx != ""} {
-				debug::log db "uniquefieldsidx = $uniquefieldsidx"
+				wa_debug::log db "uniquefieldsidx = $uniquefieldsidx"
 				::set uniquefieldsidx [lindex $uniquefieldsidx 0]
 
-				debug::log db "mk::get db.__unique_fields!$uniquefieldsidx fields"
+				wa_debug::log db "mk::get db.__unique_fields!$uniquefieldsidx fields"
 				::set uniquefields [mk::get db.__unique_fields!$uniquefieldsidx fields]
-				debug::log db "   ** $uniquefields **"
+				wa_debug::log db "   ** $uniquefields **"
 			} else {
 				::set uniquefields [list]
-				debug::log db "   ** (not found) **"
+				wa_debug::log db "   ** (not found) **"
 			}
 
 			foreach chkuniquefield $uniquefields {
@@ -307,13 +307,13 @@ namespace eval ::db {
 				}
 			}
 			if {[info exists overlappingfields]} {
-				debug::log db "   ** (overlap) $overlappingfields **"
+				wa_debug::log db "   ** (overlap) $overlappingfields **"
 				::set cmdstr [list mk::select db.${dbname}]
 				foreach overlappingfield $overlappingfields {
 					lappend cmdstr -exact $overlappingfield $fieldmapping($overlappingfield)
 				}
 
-				debug::log db $cmdstr
+				wa_debug::log db $cmdstr
 				::set idx [eval $cmdstr]
 				if {$idx == ""} {
 					::unset idx
@@ -325,17 +325,17 @@ namespace eval ::db {
 			}
 
 			if {$idx == ""} {
-				debug::log db "mk::row append db.${dbname}"
+				wa_debug::log db "mk::row append db.${dbname}"
 				::set idx [mk::row append db.${dbname}]
 
-				debug::log db "mk::cursor position idx  (idx = $idx)"
+				wa_debug::log db "mk::cursor position idx  (idx = $idx)"
 				::set idx [mk::cursor position idx]
 			}
 		}
 		foreach fieldpair $fielddata {
 			::set fieldname [lindex $fieldpair 0]
 			::set fieldvalue [lindex $fieldpair 1]
-			debug::log db [list mk::set db.${dbname}!${idx} $fieldname $fieldvalue]
+			wa_debug::log db [list mk::set db.${dbname}!${idx} $fieldname $fieldvalue]
 			mk::set db.${dbname}!${idx} $fieldname $fieldvalue
 		}
 
@@ -384,17 +384,17 @@ namespace eval ::db {
 
 		::set dbhandle [connect]
 
-		debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+		wa_debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 		::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
 
 		foreach idx $idxes {
 			if {[info exists fields]} {
 				foreach field $fields {
-					debug::log db [list mk::set db.${dbname}!${idx} $field ""]
+					wa_debug::log db [list mk::set db.${dbname}!${idx} $field ""]
 					mk::set db.${dbname}!${idx} $field ""
 				}
 			} else {
-				debug::log db "mk::row delete db.${dbname}!${idx}"
+				wa_debug::log db "mk::row delete db.${dbname}!${idx}"
 				mk::row delete db.${dbname}!${idx}
 			}
 		}
@@ -467,10 +467,10 @@ namespace eval ::db {
 		::set dbhandle [connect]
 
 		if {[info exists where]} {
-			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+			wa_debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
 		} else {
-			debug::log db "mk::select db.${dbname}"
+			wa_debug::log db "mk::select db.${dbname}"
 			::set idxes [mk::select db.${dbname}]
 		}
 
@@ -482,7 +482,7 @@ namespace eval ::db {
 			::set selmode "-list"
 		}
 
-		debug::log db "   -> $idxes"
+		wa_debug::log db "   -> $idxes"
 
 		::set ret [list]
 		foreach idx $idxes {
@@ -491,7 +491,7 @@ namespace eval ::db {
 			}
 
 			foreach field $fields {
-				debug::log db [list mk::get db.${dbname}!${idx} $field]
+				wa_debug::log db [list mk::get db.${dbname}!${idx} $field]
 				::set fieldval [mk::get db.${dbname}!${idx} $field]
 				switch -- $selmode {
 					"-list" {
@@ -556,7 +556,7 @@ namespace eval ::db {
 				::set ret $fields
 			}
 		} else {
-			debug::log db "mk::view info db.${dbname}"
+			wa_debug::log db "mk::view info db.${dbname}"
 
 			::set fields [mk::view info db.${dbname}]
 

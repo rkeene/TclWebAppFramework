@@ -1,7 +1,7 @@
 package provide module 0.3
 
 package require user
-package require debug
+package require wa_debug
 
 namespace eval module {
 	# Name: ::module::register
@@ -20,11 +20,11 @@ namespace eval module {
 		}
 
 		if {$ret} {
-			debug::log module::register "Registering module $module (ret = $ret)"
+			wa_debug::log module::register "Registering module $module (ret = $ret)"
 
 			set ::module::modinfo($module) [::list $flags $icon $desc $exposedactions]
 		} else {
-			debug::log module::register "Failed to register module $module (ret = $ret)"
+			wa_debug::log module::register "Failed to register module $module (ret = $ret)"
 		}
 
 		return $ret
@@ -98,7 +98,7 @@ namespace eval module {
 		lappend ::request::module::currentmodule $module
 
 		# Call the module
-		debug::log module::call "Calling module $module\(action=$action, subaction=$subaction)"
+		wa_debug::log module::call "Calling module $module\(action=$action, subaction=$subaction)"
 		set ret [${module}::${action} $subaction]
 
 		# Pop the module call stack

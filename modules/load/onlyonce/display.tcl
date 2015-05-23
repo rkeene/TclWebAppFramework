@@ -6,7 +6,7 @@ proc display {page module} {
 			# Absolute path
 			foreach parsepage [list local/$page ./$page] {
 				if {[file exists $parsepage]} {
-					debug::log display "Loading $parsepage"
+					wa_debug::log display "Loading $parsepage"
 					parse $parsepage
 					break
 				}
@@ -15,7 +15,7 @@ proc display {page module} {
 			# Relative path
 			foreach parsepage [list local/modules/$module/$page modules/$module/$page] {
 				if {[file exists $parsepage]} {
-					debug::log display "Loading $parsepage"
+					wa_debug::log display "Loading $parsepage"
 					parse $parsepage
 					break
 				}

@@ -2,6 +2,7 @@ package provide session 0.4
 
 package require db
 package require wa_uuid
+package require wa_debug
 
 wa_uuid::register 110 session
 
@@ -24,7 +25,7 @@ namespace eval session {
 		}
 
 		catch {
-			debug::log session::__mark_for_writing "Session variable ($var) index \"$idx\" has been written or unset ($op) (from [string range [info level -1] 0 50])"
+			wa_debug::log session::__mark_for_writing "Session variable ($var) index \"$idx\" has been written or unset ($op) (from [string range [info level -1] 0 50])"
 		}
 
 		set ::session::vars_updated 1

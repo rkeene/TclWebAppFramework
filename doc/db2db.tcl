@@ -66,8 +66,8 @@ $outdb eval $outdb_script
 foreach interp [list $indb $outdb] {
 	$interp eval [list set auto_path $auto_path]
 
-	$interp eval [list package require debug]
-	$interp eval [list debug::logfile -]
+	$interp eval [list package require wa_debug]
+	$interp eval [list wa_debug::logfile -]
 
 	$interp eval [list package require db]
 }

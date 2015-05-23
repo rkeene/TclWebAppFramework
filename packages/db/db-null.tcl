@@ -1,7 +1,7 @@
 package provide db 0.4.0
 
 package require hook
-package require debug
+package require wa_debug
 
 namespace eval ::db {
 	# Name: ::db::disconnect
@@ -75,33 +75,33 @@ namespace eval ::db {
 			::set whereval [join [lrange $wherework 1 end] =]
 			::unset wherework
 
-			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+			wa_debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idx [lindex [mk::select db.${dbname} -exact $wherevar $whereval] 0]
 
 			if {$idx == ""} {
-				debug::log db "mk::row append db.${dbname}"
+				wa_debug::log db "mk::row append db.${dbname}"
 				::set idx [mk::row append db.${dbname}]
 
-				debug::log db "mk::cursor position idx  (idx = $idx)"
+				wa_debug::log db "mk::cursor position idx  (idx = $idx)"
 				::set idx [mk::cursor position idx]
 
-				debug::log db [list mk::set db.${dbname}!${idx} $wherevar $whereval]
+				wa_debug::log db [list mk::set db.${dbname}!${idx} $wherevar $whereval]
 				mk::set db.${dbname}!${idx} $wherevar $whereval
 			}
 		} else {
-			debug::log db "mk::select db.__unique_fields -exact database $dbname"
+			wa_debug::log db "mk::select db.__unique_fields -exact database $dbname"
 			::set uniquefieldsidx [mk::select db.__unique_fields -exact database $dbname]
 
 			if {$uniquefieldsidx != ""} {
-				debug::log db "uniquefieldsidx = $uniquefieldsidx"
+				wa_debug::log db "uniquefieldsidx = $uniquefieldsidx"
 				::set uniquefieldsidx [lindex $uniquefieldsidx 0]
 
-				debug::log db "mk::get db.__unique_fields!$uniquefieldsidx fields"
+				wa_debug::log db "mk::get db.__unique_fields!$uniquefieldsidx fields"
 				::set uniquefields [mk::get db.__unique_fields!$uniquefieldsidx fields]
-				debug::log db "   ** $uniquefields **"
+				wa_debug::log db "   ** $uniquefields **"
 			} else {
 				::set uniquefields [list]
-				debug::log db "   ** (not found) **"
+				wa_debug::log db "   ** (not found) **"
 			}
 
 			foreach chkuniquefield $uniquefields {
@@ -110,13 +110,13 @@ namespace eval ::db {
 				}
 			}
 			if {[info exists overlappingfields]} {
-				debug::log db "   ** (overlap) $overlappingfields **"
+				wa_debug::log db "   ** (overlap) $overlappingfields **"
 				::set cmdstr [list mk::select db.${dbname}]
 				foreach overlappingfield $overlappingfields {
 					lappend cmdstr -exact $overlappingfield $fieldmapping($overlappingfield)
 				}
 
-				debug::log db $cmdstr
+				wa_debug::log db $cmdstr
 				::set idx [eval $cmdstr]
 				if {$idx == ""} {
 					::unset idx
@@ -128,17 +128,17 @@ namespace eval ::db {
 			}
 
 			if {$idx == ""} {
-				debug::log db "mk::row append db.${dbname}"
+				wa_debug::log db "mk::row append db.${dbname}"
 				::set idx [mk::row append db.${dbname}]
 
-				debug::log db "mk::cursor position idx  (idx = $idx)"
+				wa_debug::log db "mk::cursor position idx  (idx = $idx)"
 				::set idx [mk::cursor position idx]
 			}
 		}
 		foreach fieldpair $fielddata {
 			::set fieldname [lindex $fieldpair 0]
 			::set fieldvalue [lindex $fieldpair 1]
-			debug::log db [list mk::set db.${dbname}!${idx} $fieldname $fieldvalue]
+			wa_debug::log db [list mk::set db.${dbname}!${idx} $fieldname $fieldvalue]
 			mk::set db.${dbname}!${idx} $fieldname $fieldvalue
 		}
 
@@ -187,17 +187,17 @@ namespace eval ::db {
 
 		::set dbhandle [connect]
 
-		debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+		wa_debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 		::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
 
 		foreach idx $idxes {
 			if {[info exists fields]} {
 				foreach field $fields {
-					debug::log db [list mk::set db.${dbname}!${idx} $field ""]
+					wa_debug::log db [list mk::set db.${dbname}!${idx} $field ""]
 					mk::set db.${dbname}!${idx} $field ""
 				}
 			} else {
-				debug::log db "mk::row delete db.${dbname}!${idx}"
+				wa_debug::log db "mk::row delete db.${dbname}!${idx}"
 				mk::row delete db.${dbname}!${idx}
 			}
 		}
@@ -270,10 +270,10 @@ namespace eval ::db {
 		::set dbhandle [connect]
 
 		if {[info exists where]} {
-			debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
+			wa_debug::log db [list mk::select db.${dbname} -exact $wherevar $whereval]
 			::set idxes [mk::select db.${dbname} -exact $wherevar $whereval]
 		} else {
-			debug::log db "mk::select db.${dbname}"
+			wa_debug::log db "mk::select db.${dbname}"
 			::set idxes [mk::select db.${dbname}]
 		}
 
@@ -285,7 +285,7 @@ namespace eval ::db {
 			::set selmode "-list"
 		}
 
-		debug::log db "   -> $idxes"
+		wa_debug::log db "   -> $idxes"
 
 		::set ret [list]
 		foreach idx $idxes {
@@ -294,7 +294,7 @@ namespace eval ::db {
 			}
 
 			foreach field $fields {
-				debug::log db [list mk::get db.${dbname}!${idx} $field]
+				wa_debug::log db [list mk::get db.${dbname}!${idx} $field]
 				::set fieldval [mk::get db.${dbname}!${idx} $field]
 				switch -- $selmode {
 					"-list" {
@@ -359,7 +359,7 @@ namespace eval ::db {
 				::set ret $fields
 			}
 		} else {
-			debug::log db "mk::view info db.${dbname}"
+			wa_debug::log db "mk::view info db.${dbname}"
 
 			::set fields [mk::view info db.${dbname}]
 

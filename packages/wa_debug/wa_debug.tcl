@@ -1,16 +1,16 @@
-package provide debug 1.0
+package provide wa_debug 1.0
 
-namespace eval debug {
+namespace eval wa_debug {
 	proc log {src msg} {
-		if {![info exists ::debug::logfile]} {
+		if {![info exists ::wa_debug::logfile]} {
 			return
 		}
 
 		catch {
-			if {$::debug::logfile == "-"} {
+			if {$::wa_debug::logfile == "-"} {
 				set logfd stderr
 			} else {
-				set logfd [open $::debug::logfile a+]
+				set logfd [open $::wa_debug::logfile a+]
 			}
 
 			set usec [lindex [split [expr [format "%u" [clock clicks]].0 / 1000000.0] .] 1]
@@ -26,10 +26,10 @@ namespace eval debug {
 	}
 
 	proc logfile {file} {
-		set ::debug::logfile $file
+		set ::wa_debug::logfile $file
 	}
 
 	proc logoff {} {
-		unset -nocomplain ::debug::logfile
+		unset -nocomplain ::wa_debug::logfile
 	}
 }

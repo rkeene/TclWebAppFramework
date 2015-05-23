@@ -32,12 +32,12 @@ if {[catch {
 	## Load scripts that get loaded for every interpreter
 	if {![info exists ::tclwebappframework::done_onlyonce]} {
 		package require module
-		package require debug
+		package require wa_debug
 		package require web
 		package require user
 		package require tclwebappframework
 
-		debug::logfile -
+		wa_debug::logfile -
 
 		foreach file [concat \
 		    [lsort -dictionary [glob -nocomplain local/modules/*/preload/*.tcl]] \
@@ -46,7 +46,7 @@ if {[catch {
 		    [lsort -dictionary [glob -nocomplain local/modules/*/load/*.tcl]] \
 		    [lsort -dictionary [glob -nocomplain local/modules/load/onlyonce/*.tcl]] \
 		] {
-			debug::log index.rvt "(per-interp) source $file"
+			wa_debug::log index.rvt "(per-interp) source $file"
 
 			namespace eval :: [list source $file]
 		}
@@ -80,7 +80,7 @@ if {[catch {
 	    [lsort -dictionary [glob -nocomplain local/modules/load/*.tcl]] \
 	    [lsort -dictionary [glob -nocomplain local/modules/*/load/everyrequest/*.tcl]] \
 	] {
-		debug::log index.rvt "(per-request) source $file"
+		wa_debug::log index.rvt "(per-request) source $file"
 
 		source $file
 	}
@@ -170,11 +170,11 @@ if {[catch {
 	# Call the module action (unless the login module is requested, then
 	# always call the default action)
 	if {$module != "login"} {
-		debug::log index.rvt [list module::call $module $action $subaction]
+		wa_debug::log index.rvt [list module::call $module $action $subaction]
 
 		set newpage [module::call $module $action $subaction]
 	} else {
-		debug::log index.rvt "Calling [list module::call "login" "" ""] because module has been set to \"login\""
+		wa_debug::log index.rvt "Calling [list module::call "login" "" ""] because module has been set to \"login\""
 
 		set newpage [module::call login "" ""]
 	}
@@ -188,7 +188,7 @@ if {[catch {
 	# that the user is required to authenticate?
 	if {$newpage == ""} {
 		if {$module != "login"} {
-			debug::log index.rvt "Calling [list module::call "login" "" ""] because $module::$action($subaction) returned a blank page."
+			wa_debug::log index.rvt "Calling [list module::call "login" "" ""] because $module::$action($subaction) returned a blank page."
 
 			set module "login"
 
@@ -213,7 +213,7 @@ if {[catch {
 	if {$displayheaders} {
 		# Display the header output as determined earlier for this interpreter
 		foreach {headmod header} $::tclwebappframework::headers {
-			debug::log index.rvt "Displaying $header/$headmod"
+			wa_debug::log index.rvt "Displaying $header/$headmod"
 			display $header $headmod
 		}
 	}
@@ -224,7 +224,7 @@ if {[catch {
 	if {$displayheaders} {
 		# Display the header output as determined earlier for this interpreter
 		foreach {footmod footer} $::tclwebappframework::footers {
-			debug::log index.rvt "Displaying $footer/$footmod"
+			wa_debug::log index.rvt "Displaying $footer/$footmod"
 			display $footer $footmod
 		}
 	}

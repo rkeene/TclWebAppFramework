@@ -2,27 +2,27 @@
 # if they are, setup an authenticated session.
 set uid ""
 if {[user::getuid] == "0" && ![info exists args(user)]} {
-	debug::log "verify-password.tcl" "We are nobody, switching to the anonymous user."
+	wa_debug::log "verify-password.tcl" "We are nobody, switching to the anonymous user."
 
 	set uid [user::getuid "anonymous"]
 } elseif {[info exists args(user)] && [info exists args(pass)]} {
-	debug::log "verify-password.tcl" "We have been asked to authenticate as a user ($args(user))"
+	wa_debug::log "verify-password.tcl" "We have been asked to authenticate as a user ($args(user))"
 
 	set newuid [user::getuid $args(user)]
 	if {$newuid != "0"} {
 		set user_ok [user::login $newuid $args(pass) "127.0.0.1"]
 
 		if {$user_ok} {
-			debug::log "verify-password.tcl" "Password has been verified."
+			wa_debug::log "verify-password.tcl" "Password has been verified."
 
 			set uid $newuid
 		} else {
-			debug::log "verify-password.tcl" "Failed to verify password, trying to switch to an anonymous user"
+			wa_debug::log "verify-password.tcl" "Failed to verify password, trying to switch to an anonymous user"
 
 			set uid [user::getuid "anonymous"]
 		}
 	} else {
-		debug::log "verify-password.tcl" "Invalid user \"$args(user)\", ignoring."
+		wa_debug::log "verify-password.tcl" "Invalid user \"$args(user)\", ignoring."
 	}
 
 	unset -nocomplain user_ok newuid
@@ -32,9 +32,9 @@ if {$uid != ""} {
 	if {$uid != "0"} {
 		set suidret [user::setuid $uid]
 
-		debug::log "verify-password.tcl" "Switching to UID $uid ([user::getnam $uid])... $suidret"
+		wa_debug::log "verify-password.tcl" "Switching to UID $uid ([user::getnam $uid])... $suidret"
 	} else {
-		debug::log "verify-password.tcl" "Unable to initiate user switching, cannot lookup uid for \"anonymous\""
+		wa_debug::log "verify-password.tcl" "Unable to initiate user switching, cannot lookup uid for \"anonymous\""
 	}
 
 	unset -nocomplain uid suidret

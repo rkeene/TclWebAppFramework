@@ -10,9 +10,9 @@ if {[llength $argv] != 0} {
 }
 
 package require web
-package require debug
+package require wa_debug
 
-debug::logfile "-"
+wa_debug::logfile "-"
 
 proc web_test_puts args {
 	if {[llength $args] != 2 || [lindex $args 0] != "-nonewline"} {

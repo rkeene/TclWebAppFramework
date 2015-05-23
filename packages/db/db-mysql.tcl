@@ -2,7 +2,7 @@ package provide db 0.4.0
 
 package require mysqltcl
 package require hook
-package require debug
+package require wa_debug
 package require wa_uuid
 
 namespace eval ::db {
@@ -38,7 +38,7 @@ namespace eval ::db {
 		}
 		::unset ::db::CACHEDBHandle
 
-		debug::log db "Disconnecting from MySQL database."
+		wa_debug::log db "Disconnecting from MySQL database."
 
 		hook::call db::disconnect::return 1
 
@@ -67,7 +67,7 @@ namespace eval ::db {
 
 		hook::call db::connect::enter
 
-		debug::log db "Connecting to MySQL database."
+		wa_debug::log db "Connecting to MySQL database."
 
 		catch {
 			::set ::db::CACHEDBHandle [mysqlconnect -host $::config::db(server) -user $::config::db(user)  -password $::config::db(pass) -db $::config::db(dbname)]
@@ -135,7 +135,7 @@ namespace eval ::db {
 		hook::call db::create::enter $dbname $newfields
 
 		::set dbhandle [connect]
-		debug::log db "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
+		wa_debug::log db "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
 
 		if {[catch {
 			mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
@@ -198,7 +198,7 @@ namespace eval ::db {
 				::set fieldvalue [lindex $fieldpair 1]
 				lappend fieldassignlist "$fieldname=[sqlquote $fieldvalue]"
 			}
-			debug::log db "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
+			wa_debug::log db "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
 			if {[catch {
 				mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE $wherevar=[sqlquote $whereval];"
 			}]} {
@@ -209,11 +209,11 @@ namespace eval ::db {
 			::set ret 1
 		} else {
 			if {[catch {
-				debug::log db "INSERT INTO $dbname ([join $fieldnames {, }]) VALUES ([join $fieldvalues {, }]);"
+				wa_debug::log db "INSERT INTO $dbname ([join $fieldnames {, }]) VALUES ([join $fieldvalues {, }]);"
 				::set ret [mysqlexec $dbhandle "INSERT INTO $dbname ([join $fieldnames {, }]) VALUES ([join $fieldvalues {, }]);"]
 			} insertError]} {
 				if {![info exists ::db::keys($dbname)]} {
-					debug::log db "DESCRIBE $dbname;"
+					wa_debug::log db "DESCRIBE $dbname;"
 					if {[catch {
 						::set dbdesc [mysqlsel $dbhandle "DESCRIBE $dbname;" -list]
 					}]} {
@@ -241,7 +241,7 @@ namespace eval ::db {
 					::set fieldvalue [lindex $fieldpair 1]
 					lappend fieldassignlist "$fieldname=[sqlquote $fieldvalue]"
 				}
-				debug::log db "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
+				wa_debug::log db "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
 				if {[catch {
 					mysqlexec $dbhandle "UPDATE $dbname SET [join $fieldassignlist {, }] WHERE [join $where { AND }];"
 				}]} {
@@ -301,7 +301,7 @@ namespace eval ::db {
 		if {[info exists fields]} {
 			::set ret 1
 			foreach field $fields {
-				debug::log db "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"
+				wa_debug::log db "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"
 				if {[catch {
 					::set rettmp [mysqlexec $dbhandle "UPDATE $dbname SET $field=NULL WHERE $wherevar=[sqlquote $whereval];"]
 				}]} {
@@ -314,7 +314,7 @@ namespace eval ::db {
 				}
 			}
 		} else {
-			debug::log db "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
+			wa_debug::log db "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
 			if {[catch {
 				::set ret [mysqlexec $dbhandle "DELETE FROM $dbname WHERE $wherevar=[sqlquote $whereval];"]
 			}]} {
@@ -390,7 +390,7 @@ namespace eval ::db {
 		::set dbhandle [connect]
 
 		if {[info exists where]} {
-			debug::log db "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
+			wa_debug::log db "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];"
 			if {[catch {
 				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];" $selmode]
 			}]} {
@@ -399,7 +399,7 @@ namespace eval ::db {
 				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname WHERE $wherevar=[sqlquote $whereval];" $selmode]
 			}
 		} else {
-			debug::log db "SELECT $fieldstr FROM $dbname;"
+			wa_debug::log db "SELECT $fieldstr FROM $dbname;"
 			if {[catch {
 				::set ret [mysqlsel $dbhandle "SELECT $fieldstr FROM $dbname;" "-list"]
 			}]} {
@@ -445,7 +445,7 @@ namespace eval ::db {
 
 		::set dbhandle [connect]
 
-		debug::log db "DESCRIBE $dbname;"
+		wa_debug::log db "DESCRIBE $dbname;"
 
 		if {[catch {
 			::set dbdesc [mysqlsel $dbhandle "DESCRIBE $dbname;" -list]

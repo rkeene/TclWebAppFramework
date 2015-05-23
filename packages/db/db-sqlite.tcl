@@ -2,7 +2,7 @@ package provide db 0.4.0
 
 package require sqlite3
 package require hook
-package require debug
+package require wa_debug
 package require wa_uuid
 
 namespace eval ::db {
@@ -25,9 +25,9 @@ namespace eval ::db {
 
 		for {::set retry 0} {$retry < 30} {incr retry} {
 			if {$retry == "0"} {
-				debug::log db "$sql"
+				wa_debug::log db "$sql"
 			} else {
-				debug::log db "(try $retry) $sql"
+				wa_debug::log db "(try $retry) $sql"
 			}
 
 			if {[catch {
@@ -72,7 +72,7 @@ namespace eval ::db {
 		}
 		::unset ::db::CACHEDBHandle
 
-		debug::log db "Disconnecting from SQLite3 database."
+		wa_debug::log db "Disconnecting from SQLite3 database."
 
 		hook::call db::disconnect::return 1
 
@@ -90,7 +90,7 @@ namespace eval ::db {
 
 		hook::call db::connect::enter
 
-		debug::log db "Connecting to the SQLite3 database."
+		wa_debug::log db "Connecting to the SQLite3 database."
 
 		::unset -nocomplain ::db::cachefields
 

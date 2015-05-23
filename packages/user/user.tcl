@@ -6,6 +6,7 @@ package require crypt
 package require wa_uuid
 package require module
 package require session
+package require wa_debug
 
 wa_uuid::register 11 user
 
@@ -65,7 +66,7 @@ namespace eval user {
 	# Stat: In progress.
 	proc login {uid pass from} {
 		if {![exists $uid]} {
-			debug::log user::login "User doesn't exist ($uid)"
+			wa_debug::log user::login "User doesn't exist ($uid)"
 			return 0
 		}
 
@@ -74,20 +75,20 @@ namespace eval user {
 		set hash [get -uid $uid -pass]
 
 		if {![::crypt::compare $pass $hash]} {
-			debug::log user::login "Failed password"
+			wa_debug::log user::login "Failed password"
 
 			set retval 0
 
 			hook::call user::login::return $uid $pass $from $retval
 
-			debug::log user::login "Login for $uid, returning $retval"
+			wa_debug::log user::login "Login for $uid, returning $retval"
 
 			return $retval
 		}
 
 		set seturet [user::setuid $uid 1]
 		if {$seturet == 0} {
-			debug::log user::login "Could not setuid !"
+			wa_debug::log user::login "Could not setuid !"
 
 			set retval 0
 		} else {
@@ -96,7 +97,7 @@ namespace eval user {
 
 		hook::call user::login::return $uid $pass $from $retval
 
-		debug::log user::login "Login for $uid, returning $retval"
+		wa_debug::log user::login "Login for $uid, returning $retval"
 
 		return $retval
 	}
@@ -113,7 +114,7 @@ namespace eval user {
 	proc create args {
 		# Require admin to create a user.
 		if {![hasflag "admin"]} {
-			debug::log user::create "Attempting to create user without admin flag!"
+			wa_debug::log user::create "Attempting to create user without admin flag!"
 			return 0
 		}
 
@@ -155,20 +156,20 @@ namespace eval user {
 		set user [lindex $args $useridx]
 
 		if {$user == ""} {
-			debug::log user::create "User specified as blank!"
+			wa_debug::log user::create "User specified as blank!"
 			return 0
 		}
 
 		# Require the root flag to set the root flag.
 		if {[lsearch -exact $flags "root"] != -1 && ![hasflag "root"]} {
-			debug::log user::create "Non-root user tried to create root user!"
+			wa_debug::log user::create "Non-root user tried to create root user!"
 			return 0
 		}
 
 		# Verify that the user does not already exist
 		set check [db::get -dbname user -field uid -where user=$user]
 		if {$check != ""} {
-			debug::log user::create "Tried to create user with existing username!"
+			wa_debug::log user::create "Tried to create user with existing username!"
 			return 0
 		}
 
@@ -179,7 +180,7 @@ namespace eval user {
 		set success [db::set -dbname user -field uid $uid -field user $user -field name $name -field flags $flags -field opts $opts -field pass $pass]
 
 		if {!$success} {
-			debug::log user::create "Failed to update database while creating user."
+			wa_debug::log user::create "Failed to update database while creating user."
 			return 0
 		}
 
@@ -717,9 +718,9 @@ namespace eval user {
 	# Stat: In progress
 	proc setuid {newuid {override 0}} {
 		if {[info exists ::session::vars(uid)]} {
-			debug::log user::setuid "Asked to setuid to $newuid, from $::session::vars(uid)"
+			wa_debug::log user::setuid "Asked to setuid to $newuid, from $::session::vars(uid)"
 		} else {
-			debug::log user::setuid "Asked to setuid to $newuid, from nothing"
+			wa_debug::log user::setuid "Asked to setuid to $newuid, from nothing"
 		}
 
 		if {$newuid == 0} {

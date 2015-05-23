@@ -43,9 +43,9 @@ switch -- $::db::mode {
 }
 
 package require db
-package require debug
+package require wa_debug
 
-debug::logfile "-"
+wa_debug::logfile "-"
 
 db::create -dbname test -fields [list joe:pk bob:u sally]
 
