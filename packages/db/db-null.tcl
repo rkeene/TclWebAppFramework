@@ -1,6 +1,6 @@
 package provide db 0.4.0
 
-package require hook
+package require webapp::hook
 package require wa_debug
 
 namespace eval ::db {
@@ -62,9 +62,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists where]} {
-			hook::call db::set::enter $dbname $fielddata $where
+			webapp::hook::call db::set::enter $dbname $fielddata $where
 		} else {
-			hook::call db::set::enter $dbname $fielddata
+			webapp::hook::call db::set::enter $dbname $fielddata
 		}
 
 		::set dbhandle [connect]
@@ -147,9 +147,9 @@ namespace eval ::db {
 		::set ret 1
 
 		if {[info exists where]} {
-			hook::call db::set::return $ret $dbname $fielddata $where
+			webapp::hook::call db::set::return $ret $dbname $fielddata $where
 		} else {
-			hook::call db::set::return $ret $dbname $fielddata
+			webapp::hook::call db::set::return $ret $dbname $fielddata
 		}
 
 		return $ret
@@ -180,9 +180,9 @@ namespace eval ::db {
 		::unset wherework
 
 		if {[info exists fields]} {
-			hook::call db::unset::enter $dbname $where $fields
+			webapp::hook::call db::unset::enter $dbname $where $fields
 		} else {
-			hook::call db::unset::enter $dbname $where
+			webapp::hook::call db::unset::enter $dbname $where
 		}
 
 		::set dbhandle [connect]
@@ -211,9 +211,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists fields]} {
-			hook::call db::unset::return $ret $dbname $where $fields
+			webapp::hook::call db::unset::return $ret $dbname $where $fields
 		} else {
-			hook::call db::unset::return $ret $dbname $where
+			webapp::hook::call db::unset::return $ret $dbname $where
 		}
 
 		return $ret
@@ -262,9 +262,9 @@ namespace eval ::db {
 		::set dbname [lindex $args $dbnameidx]
 
 		if {[info exists where]} {
-			hook::call db::get::enter $dbname $fields $allbool $where
+			webapp::hook::call db::get::enter $dbname $fields $allbool $where
 		} else {
-			hook::call db::get::enter $dbname $fields $allbool
+			webapp::hook::call db::get::enter $dbname $fields $allbool
 		}
 
 		::set dbhandle [connect]
@@ -318,9 +318,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists where]} {
-			hook::call db::get::return $ret $dbname $fields $allbool $where
+			webapp::hook::call db::get::return $ret $dbname $fields $allbool $where
 		} else {
-			hook::call db::get::return $ret $dbname $fields $allbool
+			webapp::hook::call db::get::return $ret $dbname $fields $allbool
 		}
 
 		return $ret

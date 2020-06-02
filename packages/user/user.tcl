@@ -1,7 +1,7 @@
 package provide user 0.1
 
 package require db
-package require hook
+package require webapp::hook
 package require crypt
 package require wa_uuid
 package require module
@@ -21,7 +21,7 @@ namespace eval user {
 	#	0 is returned if no user exists.
 	# Stat: Complete
 	proc getuid {{username ""}} {
-		hook::call user::getuid::enter $username
+		webapp::hook::call user::getuid::enter $username
 
 		if {$username == ""} {
 			if {[info exists ::session::vars(uid)]} {
@@ -36,7 +36,7 @@ namespace eval user {
 			return 0
 		}
 
-		hook::call user::getuid::return $uid $username
+		webapp::hook::call user::getuid::return $uid $username
 
 		return $uid
 	}
@@ -48,11 +48,11 @@ namespace eval user {
 	#	An empty string is returned if the user does not exist.
 	# Stat: Complete
 	proc getnam {uid} {
-		hook::call user::getnam::enter $uid
+		webapp::hook::call user::getnam::enter $uid
 
 		set username [get -uid $uid -user]
 
-		hook::call user::getnam::return $username $uid
+		webapp::hook::call user::getnam::return $username $uid
 
 		return $username
 	}
@@ -70,7 +70,7 @@ namespace eval user {
 			return 0
 		}
 
-		hook::call user::login $uid $pass $from
+		webapp::hook::call user::login $uid $pass $from
 
 		set hash [get -uid $uid -pass]
 
@@ -79,7 +79,7 @@ namespace eval user {
 
 			set retval 0
 
-			hook::call user::login::return $uid $pass $from $retval
+			webapp::hook::call user::login::return $uid $pass $from $retval
 
 			wa_debug::log user::login "Login for $uid, returning $retval"
 
@@ -95,7 +95,7 @@ namespace eval user {
 			set retval 1
 		}
 
-		hook::call user::login::return $uid $pass $from $retval
+		webapp::hook::call user::login::return $uid $pass $from $retval
 
 		wa_debug::log user::login "Login for $uid, returning $retval"
 
@@ -173,7 +173,7 @@ namespace eval user {
 			return 0
 		}
 
-		hook::call user::create::enter $user $name $flags $opts $pass
+		webapp::hook::call user::create::enter $user $name $flags $opts $pass
 
 		set uid [wa_uuid::gen user]
 
@@ -184,7 +184,7 @@ namespace eval user {
 			return 0
 		}
 
-		hook::call user::create::return $uid $user $name $flags $opts $pass
+		webapp::hook::call user::create::return $uid $user $name $flags $opts $pass
 
 		return $uid
 	}
@@ -208,11 +208,11 @@ namespace eval user {
 		# Invalidate cache
 		unset -nocomplain ::user::cache_get
 
-		hook::call user::delete::enter $uid
+		webapp::hook::call user::delete::enter $uid
 
 		set success [db::unset -dbname user -where uid=$uid]
 
-		hook::call user::delete::return $success $uid
+		webapp::hook::call user::delete::return $success $uid
 
 		return $success
 	}
@@ -254,7 +254,7 @@ namespace eval user {
 		# Invalidate cache
 		unset -nocomplain ::user::cache_get
 
-		hook::call user::create::enter $uid $args
+		webapp::hook::call user::create::enter $uid $args
 
 		set ret 1
 
@@ -306,7 +306,7 @@ namespace eval user {
 			}
 		}
 
-		hook::call user::create::return $ret $uid $args
+		webapp::hook::call user::create::return $ret $uid $args
 
 		return $ret
 	}
@@ -397,12 +397,12 @@ namespace eval user {
 			set fieldscmd "-fields"
 		}
 
-		hook::call user::get::enter $uid $fields
+		webapp::hook::call user::get::enter $uid $fields
 
 		set ret [db::get -dbname user $wherecmd uid=$uid $fieldscmd $fields]
 		set ::user::cache_get($args) $ret
 
-		hook::call user::get::return $ret $uid $fields
+		webapp::hook::call user::get::return $ret $uid $fields
 
 		return $ret
 	}
@@ -424,7 +424,7 @@ namespace eval user {
 			set flags $uid
 		}
 
-		hook::call user::hasflag::enter $uid $chkflags
+		webapp::hook::call user::hasflag::enter $uid $chkflags
 
 		set rootchk [lsearch -exact $flags root]
 
@@ -434,12 +434,12 @@ namespace eval user {
 				set found 0
 			}
 			if {$found == -1} {
-				hook::call user::hasflag::return 0 $uid $chkflags
+				webapp::hook::call user::hasflag::return 0 $uid $chkflags
 				return 0
 			}
 		}
 
-		hook::call user::hasflag::return 1 $uid $chkflags
+		webapp::hook::call user::hasflag::return 1 $uid $chkflags
 
 		return 1
 	}
@@ -456,7 +456,7 @@ namespace eval user {
 			set uid [getuid]
 		}
 
-		hook::call user::setflag::enter $uid $newflags
+		webapp::hook::call user::setflag::enter $uid $newflags
 
 		set flags [string tolower [get -uid $uid -flags]]
 
@@ -481,7 +481,7 @@ namespace eval user {
 			set ret 0
 		}
 
-		hook::call user::setflag::return $ret $uid $newflags $flags
+		webapp::hook::call user::setflag::return $ret $uid $newflags $flags
 
 		return $ret
 	}
@@ -497,7 +497,7 @@ namespace eval user {
 			set uid [getuid]
 		}
 
-		hook::call user::unsetflag::enter $uid $delflags
+		webapp::hook::call user::unsetflag::enter $uid $delflags
 
 		set flags [string tolower [get -uid $uid -flags]]
 
@@ -529,7 +529,7 @@ namespace eval user {
 			set ret 0
 		}
 
-		hook::call user::unsetflag::return $uid $delflags $newflags
+		webapp::hook::call user::unsetflag::return $uid $delflags $newflags
 
 		return $ret
 	}
@@ -635,7 +635,7 @@ namespace eval user {
 	# Rets: 1 if the user exists, 0 otherwise
 	# Stat: Complete
 	proc exists {uid} {
-		hook::call user::exists::enter $uid
+		webapp::hook::call user::exists::enter $uid
 
 		set ret 1
 
@@ -645,7 +645,7 @@ namespace eval user {
 			set ret 0
 		}
 
-		hook::call user::exists::return $ret $uid
+		webapp::hook::call user::exists::return $ret $uid
 
 		return $ret
 	}
@@ -656,7 +656,7 @@ namespace eval user {
 	# Rets: A list of UIDs for users who have the flag specified.
 	# Stat: Complete
 	proc listflag {flag} {
-		hook::call user::listflag::enter $flag
+		webapp::hook::call user::listflag::enter $flag
 
 		set isbad [info exists ::user::badflag($flag)]
 
@@ -676,7 +676,7 @@ namespace eval user {
 			}
 		}
 
-		hook::call user::listflag::enter $ret $flag
+		webapp::hook::call user::listflag::enter $ret $flag
 
 		return $ret
 	}

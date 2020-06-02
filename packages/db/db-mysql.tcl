@@ -1,7 +1,7 @@
 package provide db 0.4.0
 
 package require mysqltcl
-package require hook
+package require webapp::hook
 package require wa_debug
 package require wa_uuid
 
@@ -31,7 +31,7 @@ namespace eval ::db {
 			return 1
 		}
 
-		hook::call db::disconnect::enter
+		webapp::hook::call db::disconnect::enter
 
 		catch {
 			mysqlclose $::db::CACHEDBHandle
@@ -40,7 +40,7 @@ namespace eval ::db {
 
 		wa_debug::log db "Disconnecting from MySQL database."
 
-		hook::call db::disconnect::return 1
+		webapp::hook::call db::disconnect::return 1
 
 		return 1
 	}
@@ -65,7 +65,7 @@ namespace eval ::db {
 			}
 		}
 
-		hook::call db::connect::enter
+		webapp::hook::call db::connect::enter
 
 		wa_debug::log db "Connecting to MySQL database."
 
@@ -77,7 +77,7 @@ namespace eval ::db {
 			return -code error "error: Could not connect to SQL Server: $connectError"
 		}
 
-		hook::call db::connect::return $::db::CACHEDBHandle
+		webapp::hook::call db::connect::return $::db::CACHEDBHandle
 
 		return $::db::CACHEDBHandle
 	}
@@ -132,7 +132,7 @@ namespace eval ::db {
 			lappend fieldlist "$field $type($field)"
 		}
 
-		hook::call db::create::enter $dbname $newfields
+		webapp::hook::call db::create::enter $dbname $newfields
 
 		::set dbhandle [connect]
 		wa_debug::log db "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
@@ -145,7 +145,7 @@ namespace eval ::db {
 			mysqlexec $dbhandle "CREATE TABLE IF NOT EXISTS $dbname ([join $fieldlist {, }]);"
 		}
 
-		hook::call db::create::return 1 $dbname $newfields
+		webapp::hook::call db::create::return 1 $dbname $newfields
 
 		return 1
 	}
@@ -181,9 +181,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists where]} {
-			hook::call db::set::enter $dbname $fielddata $where
+			webapp::hook::call db::set::enter $dbname $fielddata $where
 		} else {
-			hook::call db::set::enter $dbname $fielddata
+			webapp::hook::call db::set::enter $dbname $fielddata
 		}
 
 		::set dbhandle [connect]
@@ -258,9 +258,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists where]} {
-			hook::call db::set::return $ret $dbname $fielddata $where
+			webapp::hook::call db::set::return $ret $dbname $fielddata $where
 		} else {
-			hook::call db::set::return $ret $dbname $fielddata
+			webapp::hook::call db::set::return $ret $dbname $fielddata
 		}
 
 		return $ret
@@ -291,9 +291,9 @@ namespace eval ::db {
 		::unset wherework
 
 		if {[info exists fields]} {
-			hook::call db::unset::enter $dbname $where $fields
+			webapp::hook::call db::unset::enter $dbname $where $fields
 		} else {
-			hook::call db::unset::enter $dbname $where
+			webapp::hook::call db::unset::enter $dbname $where
 		}
 
 		::set dbhandle [connect]
@@ -329,9 +329,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists fields]} {
-			hook::call db::unset::return $ret $dbname $where $fields
+			webapp::hook::call db::unset::return $ret $dbname $where $fields
 		} else {
-			hook::call db::unset::return $ret $dbname $where
+			webapp::hook::call db::unset::return $ret $dbname $where
 		}
 
 		return $ret
@@ -382,9 +382,9 @@ namespace eval ::db {
 		::set dbname [lindex $args $dbnameidx]
 
 		if {[info exists where]} {
-			hook::call db::get::enter $dbname $fields $allbool $where
+			webapp::hook::call db::get::enter $dbname $fields $allbool $where
 		} else {
-			hook::call db::get::enter $dbname $fields $allbool
+			webapp::hook::call db::get::enter $dbname $fields $allbool
 		}
 
 		::set dbhandle [connect]
@@ -416,9 +416,9 @@ namespace eval ::db {
 		}
 
 		if {[info exists where]} {
-			hook::call db::get::return $ret $dbname $fields $allbool $where
+			webapp::hook::call db::get::return $ret $dbname $fields $allbool $where
 		} else {
-			hook::call db::get::return $ret $dbname $fields $allbool
+			webapp::hook::call db::get::return $ret $dbname $fields $allbool
 		}
 
 		return $ret
