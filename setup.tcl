@@ -1,24 +1,63 @@
-#! /usr/bin/tclsh
+#! /usr/bin/env tclsh
+
+if {[lindex $argv 0] eq "--help"} {
+	puts "usage: setup.tcl \[<args>\]"
+	puts ""
+	puts "args:"
+	puts "    --db {mysql|sqlite|mk4}"
+	puts "    --root-user <username>"
+	puts "    --root-password <password>"
+	puts ""
+	puts "For --db mysql:"
+	puts "    --mysql-username <username>"
+	puts "    --mysql-password <password>"
+	puts "    --mysql-host <hostname>"
+	puts "    --mysql-dbname <database_name>"
+	puts ""
+	puts "For --db sqlite and --db mk4:"
+	puts "    --db-file <filename>"
+	puts "    --db-file-relative {y|n}"
+	exit 0
+}
+
+array set cli_config $argv
 
 cd [file dirname [info script]]
 
 lappend auto_path packages
 
-puts -nonewline "Type of DB (mysql, mk4, sqlite): "
-flush stdout
-gets stdin dbtype
-namespace eval ::config {}
-switch -- [string trim [string tolower $dbtype]] {
-	"mysql" - "sql" - "" {
-		set config::db(mode) mysql
+proc prompt {cli_config_option prompt variable {validate ""}} {
+	if {![info exists ::cli_config($cli_config_option)]} {
+		puts -nonewline "${prompt}: "
+		flush stdout
+		gets stdin value
+	} else {
+		set value $::cli_config($cli_config_option)
 	}
-	"mk4" {
-		set config::db(mode) mk4
+
+	if {$validate ne ""} {
+		set value [apply $validate $value]
 	}
-	"sqlite" {
-		set config::db(mode) sqlite
-	}
+
+	uplevel 1 [list set $variable $value]
 }
+
+namespace eval ::config {}
+
+prompt --db "Type of DB (mysql, mk4, sqlite)" config::db(mode) {{dbtype} {
+	switch -- [string trim [string tolower $dbtype]] {
+		"mysql" - "sql" - "" {
+			set dbtype mysql
+		}
+		"mk4" {
+			set dbtype mk4
+		}
+		"sqlite" {
+			set dbtype sqlite
+		}
+	}
+	return $dbtype
+}}
 
 package require user
 package require db
@@ -36,13 +75,9 @@ namespace eval config {}
 set rootuser ""
 set rootpass ""
 while 1 {
-	puts -nonewline "Please enter a username for the initial user: "
-	flush stdout
-	gets stdin rootuser
+	prompt --root-user "Please enter a username for the initial user" rootuser
+	prompt --root-password "Please enter a password" rootpass
 
-	puts -nonewline "Please enter a password: "
-	flush stdout
-	gets stdin rootpass
 	if {$rootpass != "" && $rootuser != ""} {
 		break
 	}
@@ -51,21 +86,10 @@ while 1 {
 }
 
 if {$config::db(mode) == "mysql"} {
-	puts -nonewline "DB Username: "
-	flush stdout
-	gets stdin config::db(user)
-
-	puts -nonewline "DB Password: "
-	flush stdout
-	gets stdin config::db(pass)
-
-	puts -nonewline "DB Host: "
-	flush stdout
-	gets stdin config::db(server)
-
-	puts -nonewline "DB Database Name: "
-	flush stdout
-	gets stdin config::db(dbname)
+	prompt --mysql-username "DB Username" config::db(user)
+	prompt --mysql-password "DB Password" config::db(pass)
+	prompt --mysql-host     "DB Host"   config::db(server)
+	prompt --mysql-dbname   "DB Database Name" config::db(dbname)
 
 	file mkdir "local/modules/load/onlyonce/"
 	set fd [open "local/modules/load/onlyonce/dbconfig.tcl" w]
@@ -78,24 +102,29 @@ if {$config::db(mode) == "mysql"} {
 	puts $fd "}"
 	close $fd
 } else {
-	puts -nonewline "DB Filename: "
-	flush stdout
-	gets stdin config::db(filename)
-
+	prompt --db-file "DB Filename" config::db(filename)
 	if {[string index $config::db(filename) 0] != "/"} {
-		puts -nonewline "Database relative to running script (y) or setup.tcl (n) (y/N): "
-		flush stdout
-		gets stdin relative
-	} else {
-		set relative "n"
-	}
+		prompt --db-file-relative "Database relative to running script (y) or setup.tcl (n) (y/N)" relative {{value} {
+			switch -exact -- [string tolower $value] {
+				"y" - "yes" {
+					set value true
+				}
+				default {
+					set value false
+				}
+			}
 
+			return $value
+		}}
+	} else {
+		set relative false
+	}
 
 	file mkdir "local/modules/load/onlyonce/"
 	set fd [open "local/modules/load/onlyonce/dbconfig.tcl" w]
 	puts $fd "namespace eval ::config {"
 
-	if {[string tolower $relative] == "y"} {
+	if {$relative} {
 		puts stderr " *** SECURITY WARNING ***"
 		puts stderr "Please ensure that the database file (\"$config::db(filename)\") is not"
 		puts stderr "accessible via HTTP (this usually does not affect RivetCGI)."
