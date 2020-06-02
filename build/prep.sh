@@ -2,6 +2,7 @@
 
 # Generate the documentation
 (
+	exit 0
 	cd doc || exit 1
 	rm -f userguide.pdf webapp.pdf
 	lyx2pdf userguide.lyx
