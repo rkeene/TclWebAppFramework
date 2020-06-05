@@ -188,7 +188,7 @@ if {[catch {
 	# that the user is required to authenticate?
 	if {$newpage == ""} {
 		if {$module != "login"} {
-			wa_debug::log index.rvt "Calling [list module::call "login" "" ""] because $module::$action($subaction) returned a blank page."
+			wa_debug::log index.rvt "Calling [list module::call "login" "" ""] because ${module}::${action}(${subaction}) returned a blank page."
 
 			set module "login"
 
